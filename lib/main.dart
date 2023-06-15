@@ -232,47 +232,47 @@ class InstructorPage extends StatelessWidget {
             child: const Text('User details (disabled)'),
           ),
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               padding: const EdgeInsets.all(20),
               itemBuilder: (context, index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor,
-                    border: Border(
-                      top: (index == 0)
-                          ? BorderSide(color: Theme.of(context).dividerColor)
-                          : BorderSide.none,
-                      bottom: BorderSide(color: Theme.of(context).dividerColor),
-                    ),
-                  ),
-                  child: Material(
-                    child: InkWell(
-                      onTap: () => {
-                        appState.selectedElement = elements[index],
-                        Navigator.pushNamed(
-                          context,
-                          '/element',
-                        )
-                      },
-                      child: Row(
-                        children: [
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            height: 50,
-                            child: Text(elements[index]),
-                          ),
-                          Spacer(),
-                          Checkbox(
-                            value: false,
-                            onChanged: null,
-                          ),
-                        ],
-                      ),
+                // return Container(
+                // decoration: BoxDecoration(
+                //   color: Theme.of(context).dividerColor,
+                //   border: Border(
+                //     top: (index == 0)
+                //         ? BorderSide(color: Theme.of(context).dividerColor)
+                //         : BorderSide.none,
+                //     bottom: BorderSide(color: Theme.of(context).dividerColor),
+                //   ),
+                // ),
+                return Material(
+                  child: InkWell(
+                    onTap: () => {
+                      appState.selectedElement = elements[index],
+                      Navigator.pushNamed(
+                        context,
+                        '/element',
+                      )
+                    },
+                    child: Row(
+                      children: [
+                        Container(
+                          alignment: Alignment.centerLeft,
+                          height: 50,
+                          child: Text(elements[index]),
+                        ),
+                        Spacer(),
+                        Checkbox(
+                          value: false,
+                          onChanged: null,
+                        ),
+                      ],
                     ),
                   ),
                 );
               },
               itemCount: elements.length,
+              separatorBuilder: (context, index) => const Divider(),
             ),
           ),
           Expanded(
