@@ -276,14 +276,16 @@ class InstructorPage extends StatelessWidget {
             ),
           ),
           Expanded(
-            child: Align(
+            flex: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
               alignment: FractionalOffset.bottomCenter,
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
                   Navigator.pop(context);
                 },
-                child: Text('Submit Assessemnt'),
+                child: Text('Submit Element'),
               ),
             ),
           ),
@@ -329,7 +331,7 @@ class ElementPage extends StatelessWidget {
     Map<String, List<String>?> elements = {
       "A": [
         "The aims of the compulsory basic training course.",
-        "The importance of having the right equipment and clothi..g",
+        "The importance of having the right equipment and clothing.",
         "Read a vehicle registration plate 79.4 mm in height at 20.5m.",
       ],
       "B": [
@@ -386,59 +388,55 @@ class ElementPage extends StatelessWidget {
         ),
       ),
       body: Column(
-        children: [
+        mainAxisAlignment: MainAxisAlignment.spaceAround,
+        children: <Widget>[
           Expanded(
-            child: ListView.builder(
+            child: ListView.separated(
               padding: const EdgeInsets.all(20),
               itemBuilder: (context, index) {
-                return Container(
-                  decoration: BoxDecoration(
-                    color: Theme.of(context).dividerColor,
-                    border: Border(
-                      top: (index == 0)
-                          ? BorderSide(color: Theme.of(context).dividerColor)
-                          : BorderSide.none,
-                      bottom: BorderSide(color: Theme.of(context).dividerColor),
-                    ),
-                  ),
-                  child: Material(
-                    child: InkWell(
-                      // onTap: () => {
-                      //   appState.selectedElement = elements[index],
-                      //   Navigator.pushNamed(
-                      //     context,
-                      //     '/element',
-                      //   )
-                      // },
-                      child: Row(
-                        children: [
-                          Container(
-                            alignment: Alignment.centerLeft,
-                            height: 50,
-                            child: Text(elements[appState.selectedElement
-                                .split(" ")
-                                .last]![index]),
-                          ),
-                          Spacer(),
-                          Center(
-                            child: CheckboxExample(),
-                          ),
-                          ElevatedButton(
-                            onPressed: () {},
-                            child: Text('Add comment'),
-                          )
-                        ],
+                // return Container(
+                // decoration: BoxDecoration(
+                //   color: Theme.of(context).dividerColor,
+                //   border: Border(
+                //     top: (index == 0)
+                //         ? BorderSide(color: Theme.of(context).dividerColor)
+                //         : BorderSide.none,
+                //     bottom: BorderSide(color: Theme.of(context).dividerColor),
+                //   ),
+                // ),
+                return Material(
+                  child: Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          elements[appState.selectedElement.split(" ").last]![
+                              index],
+                          softWrap: true,
+                        ),
                       ),
-                    ),
+                      Center(
+                        child: CheckboxExample(),
+                      ),
+                      ElevatedButton(
+                        onPressed: () {
+                          // Go to comments page
+                        },
+                        child: Text(
+                            'Comments [0]'), // Update [0] with number of comments
+                      )
+                    ],
                   ),
                 );
               },
               itemCount:
                   elements[appState.selectedElement.split(" ").last]!.length,
+              separatorBuilder: (context, index) => const Divider(),
             ),
           ),
           Expanded(
-            child: Align(
+            flex: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
               alignment: FractionalOffset.bottomCenter,
               child: ElevatedButton(
                 onPressed: () {
