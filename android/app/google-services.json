@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "124991237466",
+    "firebase_url": "https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app",
+    "project_id": "redee-b3df9",
+    "storage_bucket": "redee-b3df9.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:124991237466:android:f74b14f39ea66c46641763",
+        "android_client_info": {
+          "package_name": "com.example.redee_app"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "124991237466-6sjklr4su6cplfh90c6btagd4a7ra3ai.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDNnubCH9j_apmD-nHJiMl-X-o8T8yBH0Q"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "124991237466-6sjklr4su6cplfh90c6btagd4a7ra3ai.apps.googleusercontent.com",
+              "client_type": 3
+            },
+            {
+              "client_id": "124991237466-3cg9ie00k73hp00ak2l89el610hith2t.apps.googleusercontent.com",
+              "client_type": 2,
+              "ios_info": {
+                "bundle_id": "com.example.redeeApp.RunnerTests"
+              }
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

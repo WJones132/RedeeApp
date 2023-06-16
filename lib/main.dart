@@ -1,8 +1,17 @@
 import 'package:english_words/english_words.dart';
+import 'package:comment_box/comment/comment.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:firebase_core/firebase_core.dart';
+import 'firebase_options.dart';
+import 'dart:io' show Platform;
 
 void main() {
+  // if (!Platform.isLinux && !Platform.isWindows) {
+  Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  // }
   runApp(MyApp());
 }
 
@@ -29,7 +38,8 @@ class MyApp extends StatelessWidget {
           '/selectInstructor': (context) => SelectInstructorPage(),
           '/instructor': (context) => InstructorPage(),
           '/element': (context) => ElementPage(),
-          '/instructorDetails': (context) => InstructorDetailsPage()
+          '/instructorDetails': (context) => InstructorDetailsPage(),
+          '/comments': (context) => CommentsPage(),
         },
       ),
     );
@@ -100,27 +110,6 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
           body: Row(
             children: [
-              // SafeArea(
-              //   child: NavigationRail(
-              //     extended: constrains.maxWidth >= 600,
-              //     destinations: [
-              //       NavigationRailDestination(
-              //         icon: Icon(Icons.home),
-              //         label: Text('Home'),
-              //       ),
-              //       NavigationRailDestination(
-              //         icon: Icon(Icons.favorite),
-              //         label: Text('Favorites'),
-              //       ),
-              //     ],
-              //     selectedIndex: selectedIndex,
-              //     onDestinationSelected: (value) {
-              //       setState(() {
-              //         context.watch<MyAppState>().changePage(value);
-              //       });
-              //     },
-              //   ),
-              // ),
               Expanded(
                 child: Container(
                   color: Theme.of(context).colorScheme.onInverseSurface,
@@ -217,6 +206,13 @@ class InstructorPage extends StatelessWidget {
       'Element E',
     ];
 
+    if (appState.selectedInstructor == "") {
+      Navigator.popUntil(
+        context,
+        ModalRoute.withName('/selectInstructor'),
+      );
+    }
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -235,16 +231,6 @@ class InstructorPage extends StatelessWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
               itemBuilder: (context, index) {
-                // return Container(
-                // decoration: BoxDecoration(
-                //   color: Theme.of(context).dividerColor,
-                //   border: Border(
-                //     top: (index == 0)
-                //         ? BorderSide(color: Theme.of(context).dividerColor)
-                //         : BorderSide.none,
-                //     bottom: BorderSide(color: Theme.of(context).dividerColor),
-                //   ),
-                // ),
                 return Material(
                   child: InkWell(
                     onTap: () => {
@@ -283,6 +269,7 @@ class InstructorPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
+                  appState.selectedInstructor = "";
                   Navigator.pop(context);
                 },
                 child: Text('Submit Element'),
@@ -327,6 +314,11 @@ class ElementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+
+    if (appState.selectedInstructor == "") {
+      Navigator.of(context).pushNamedAndRemoveUntil(
+          '/selectInstructor', (Route<dynamic> route) => false);
+    }
 
     Map<String, List<String>?> elements = {
       "A": [
@@ -393,17 +385,8 @@ class ElementPage extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
+              shrinkWrap: true,
               itemBuilder: (context, index) {
-                // return Container(
-                // decoration: BoxDecoration(
-                //   color: Theme.of(context).dividerColor,
-                //   border: Border(
-                //     top: (index == 0)
-                //         ? BorderSide(color: Theme.of(context).dividerColor)
-                //         : BorderSide.none,
-                //     bottom: BorderSide(color: Theme.of(context).dividerColor),
-                //   ),
-                // ),
                 return Material(
                   child: Row(
                     children: [
@@ -420,10 +403,14 @@ class ElementPage extends StatelessWidget {
                       ElevatedButton(
                         onPressed: () {
                           // Go to comments page
+                          Navigator.pushNamed(
+                            context,
+                            '/comments',
+                          );
                         },
-                        child: Text(
-                            'Comments [0]'), // Update [0] with number of comments
-                      )
+                        // Update [0] with number of comments
+                        child: Text('Comments [0]'),
+                      ),
                     ],
                   ),
                 );
@@ -458,6 +445,125 @@ class InstructorDetailsPage extends StatelessWidget {
   Widget build(BuildContext context) {
     // var appState = context.watch<MyAppState>();
     return Center();
+  }
+}
+
+class CommentsPage extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    return Scaffold(
+      appBar: AppBar(
+        centerTitle: true,
+        title: Text(
+          '${appState.selectedInstructor} - ${appState.selectedElement}: Comments',
+        ),
+      ),
+      body: CommentBoxWidget(),
+    );
+  }
+}
+
+class CommentBoxWidget extends StatefulWidget {
+  CommentBoxWidget({super.key});
+
+  @override
+  _CommentBoxState createState() => _CommentBoxState();
+}
+
+class _CommentBoxState extends State<CommentBoxWidget> {
+
+  final formKey = GlobalKey<FormState>();
+  final TextEditingController commentController = TextEditingController();
+
+  List filedata = [
+    {
+      'name': 'Chuks Okwuenu',
+      'pic': 'https://picsum.photos/300/30',
+      'message': 'I love to code',
+      'date': '2021-01-01 12:00:00'
+    },
+    {
+      'name': 'Biggi Man',
+      'pic': 'https://www.adeleyeayodeji.com/img/IMG_20200522_121756_834_2.jpg',
+      'message': 'Very cool',
+      'date': '2021-01-01 12:00:00'
+    },
+    {
+      'name': 'Tunde Martins',
+      'pic': 'assets/img/userpic.jpg',
+      'message': 'Very cool',
+      'date': '2021-01-01 12:00:00'
+    },
+    {
+      'name': 'Biggi Man',
+      'pic': 'https://picsum.photos/300/30',
+      'message': 'Very cool',
+      'date': '2021-01-01 12:00:00'
+    },
+  ];
+
+  @override
+  Widget build(BuildContext context) {
+    return CommentBox(
+      // userImage: CommentBox.commentImageParser(
+      //   imageURLorPath: "assets/img/userpic.jpg",
+      // ),
+      labelText: 'Add a new comment here...',
+      errorText: 'Comment cannot be blank',
+      withBorder: false,
+      formKey: formKey,
+      commentController: commentController,
+    );
+  }
+}
+
+class CommentDialog extends StatefulWidget {
+  const CommentDialog({super.key});
+
+  @override
+  State<TextButton> createState() => _CommentTextButtonState();
+}
+
+class _CommentTextButtonState extends State<TextButton> {
+  var commentText = "";
+  final _textEditingController = TextEditingController();
+
+  @override
+  Widget build(BuildContext context) {
+    return TextButton(
+      onPressed: () => showDialog(
+        context: context,
+        builder: (BuildContext context) => AlertDialog(
+          title: Text('New comment'),
+          content: TextField(
+            onChanged: (value) {
+              setState(
+                () {
+                  commentText = value;
+                },
+              );
+            },
+            controller: _textEditingController,
+            decoration: InputDecoration(hintText: "Add new comment here..."),
+          ),
+          actions: <Widget>[
+            TextButton(
+              onPressed: () => Navigator.pop(context, 'Cancel'),
+              child: Text('Cancel'),
+            ),
+            TextButton(
+              onPressed: () {
+                print(commentText);
+                Navigator.pop(context, 'OK');
+              },
+              child: Text('Save'),
+            ),
+          ],
+        ),
+      ),
+      child: Text('Add comment'),
+    );
   }
 }
 
