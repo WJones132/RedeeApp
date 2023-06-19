@@ -4,6 +4,7 @@ import 'package:english_words/english_words.dart';
 import 'package:comment_box/comment/comment.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'dart:io' show Platform;
@@ -24,7 +25,7 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return ChangeNotifierProvider(
       create: (context) => MyAppState(),
-      child: MaterialApp(
+      child: MaterialApp /*.router*/ (
         title: 'Redee App',
         theme: ThemeData(
           useMaterial3: true,
@@ -43,6 +44,31 @@ class MyApp extends StatelessWidget {
           '/instructorDetails': (context) => InstructorDetailsPage(),
           '/comments': (context) => CommentsPage(),
         },
+        // routerConfig: GoRouter(
+        //   initialLocation: '/selectedInstructor',
+        //   routes: [
+        //     GoRoute(
+        //       path: '/selectedInstructor',
+        //       builder: (context, state) => SelectInstructorPage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/instructor',
+        //       builder: (context, state) => InstructorPage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/element',
+        //       builder: (context, state) => ElementPage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/comments',
+        //       builder: (context, state) => CommentsPage(),
+        //     ),
+        //     GoRoute(
+        //       path: '/instructorDetails',
+        //       builder: (context, state) => InstructorDetailsPage(),
+        //     ),
+        //   ],
+        // ),
       ),
     );
   }
@@ -72,7 +98,7 @@ class MyAppState extends ChangeNotifier {
   //   notifyListeners();
   // }
 
-  var instructors = <String>[];
+  // var instructors = <String>[];
   var selectedInstructor = {};
   var selectedElement = "";
   // var data = <List<List<List<List, String>>>>{};
@@ -257,7 +283,7 @@ class MyAppState extends ChangeNotifier {
             "4": [],
           },
           "C": {
-            "1": [],
+            1: [],
             "2": [],
             "3": [],
             "4": [],
@@ -296,7 +322,7 @@ class MyAppState extends ChangeNotifier {
           },
         },
         "DAS": {},
-        "email": "inst2@email.com",
+        "email": "inst3@email.com",
         "name": "Leighton Drake",
         "id": "cee2fbd2-6f64-4422-8a0a-4322f7146073",
       }
@@ -306,11 +332,12 @@ class MyAppState extends ChangeNotifier {
   List<String> comments = [];
 
   void addComment(String comment) {
-    // comments.add(comment);
-    data['instructors'][selectedInstructor['id']]['CBT']
-            [selectedElement.split(" ").last]
-        .add(comment);
-    notifyListeners();
+    if (comment.isNotEmpty) {
+      data['instructors'][selectedInstructor['id']]['CBT']
+              [selectedElement.split(" ")[1]][selectedElement.split(" ").last]
+          .add(comment);
+      notifyListeners();
+    }
   }
 }
 
@@ -366,12 +393,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
 class SelectInstructorPage extends StatelessWidget {
   SelectInstructorPage({super.key});
-
-  final List<String> entries = <String>[
-    'Garfield Villanueva',
-    'Madison Shepard',
-    'Leighton Drake'
-  ];
   final List<int> codes = <int>[600, 400, 200];
 
   @override
@@ -402,14 +423,16 @@ class SelectInstructorPage extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
-              itemCount: entries.length,
+              itemCount: appState.data['instructors'].length,
+              separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
                 return Material(
-                  color: Colors.amber[codes[index]],
+                  // color: Colors.amber[codes[index]],
                   child: InkWell(
                     onTap: () => {
                       appState.selectedInstructor =
                           appState.data['instructors'].values.elementAt(index),
+                      // context.go('/instructor'),
                       Navigator.pushNamed(
                         context,
                         '/instructor',
@@ -425,7 +448,6 @@ class SelectInstructorPage extends StatelessWidget {
                   ),
                 );
               },
-              separatorBuilder: (context, index) => const Divider(),
             ),
           ),
         ],
@@ -472,15 +494,15 @@ class InstructorPage extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
+              itemCount: elements.length,
+              separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
                 return Material(
                   child: InkWell(
                     onTap: () => {
                       appState.selectedElement = elements[index],
-                      Navigator.pushNamed(
-                        context,
-                        '/element',
-                      )
+                      // context.go('/element'),
+                      Navigator.pushNamed(context, '/element'),
                     },
                     child: Row(
                       children: [
@@ -499,8 +521,6 @@ class InstructorPage extends StatelessWidget {
                   ),
                 );
               },
-              itemCount: elements.length,
-              separatorBuilder: (context, index) => const Divider(),
             ),
           ),
           Expanded(
@@ -511,7 +531,8 @@ class InstructorPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  appState.selectedInstructor = {};
+                  // appState.selectedInstructor = {};
+                  // context.go('/selectedInstructor');
                   Navigator.pop(context);
                 },
                 child: Text('Submit Element'),
@@ -572,6 +593,10 @@ class ElementPage extends StatelessWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
               shrinkWrap: true,
+              itemCount: appState
+                  .data['elements'][appState.selectedElement.split(" ")[1]]
+                  .length,
+              separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
                 return Material(
                   child: Row(
@@ -579,7 +604,7 @@ class ElementPage extends StatelessWidget {
                       Expanded(
                         child: Text(
                           appState.data['elements']![
-                              appState.selectedElement.split(" ").last][index],
+                              appState.selectedElement.split(" ")[1]][index],
                           softWrap: true,
                         ),
                       ),
@@ -588,23 +613,19 @@ class ElementPage extends StatelessWidget {
                       ),
                       ElevatedButton(
                         onPressed: () {
-                          // Go to comments page
-                          Navigator.pushNamed(
-                            context,
-                            '/comments',
-                          );
+                          appState.selectedElement =
+                              "${appState.selectedElement} ${(index + 1).toString()}";
+                          // context.go('/comments');
+                          Navigator.pushNamed(context, '/comments');
                         },
-                        // Update [0] with number of comments
-                        child: Text('Comments [${appState.comments.length}]'),
+                        child: Text(
+                          'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][(index + 1).toString()].length}]',
+                        ),
                       ),
                     ],
                   ),
                 );
               },
-              itemCount: appState
-                  .data['elements']![appState.selectedElement.split(" ").last]!
-                  .length,
-              separatorBuilder: (context, index) => const Divider(),
             ),
           ),
           Expanded(
@@ -615,6 +636,7 @@ class ElementPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
+                  // context.go('/instructor');
                   Navigator.pop(context);
                 },
                 child: Text('Submit Element'),
@@ -648,15 +670,21 @@ class DyanmicList extends State<ListDisplay> {
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       shrinkWrap: true,
+      itemCount: appState
+          .data['instructors']![appState.selectedInstructor['id']]['CBT']
+              [appState.selectedElement.split(" ")[1]]
+              [appState.selectedElement.split(" ").last]
+          ?.length,
+      separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         return Material(
           child: Row(
             children: [
               Expanded(
                 child: Text(
-                  // appState.comments[index],
                   appState.data['instructors']
-                          [appState.selectedInstructor['id']]['CBT']
+                              [appState.selectedInstructor['id']]['CBT']
+                          [appState.selectedElement.split(" ")[1]]
                       [appState.selectedElement.split(" ").last][index],
                   softWrap: true,
                 ),
@@ -665,11 +693,6 @@ class DyanmicList extends State<ListDisplay> {
           ),
         );
       },
-      separatorBuilder: (context, index) => const Divider(),
-      itemCount: appState
-          .data['instructors'][appState.selectedInstructor['id']]['CBT']
-              [appState.selectedElement.split(" ").last]
-          .length,
     );
   }
 }
@@ -683,7 +706,7 @@ class CommentsPage extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          '${appState.selectedInstructor['name']} - ${appState.selectedElement}: Comments',
+          '${appState.selectedInstructor['name']} - ${appState.selectedElement}',
         ),
       ),
       body: Column(
@@ -692,65 +715,29 @@ class CommentsPage extends StatelessWidget {
           CommentDialog(),
           Expanded(
             child: ListDisplay(),
-          )
+          ),
+          Expanded(
+            flex: 0,
+            child: Container(
+              padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
+              alignment: FractionalOffset.bottomCenter,
+              child: ElevatedButton(
+                onPressed: () {
+                  // Save to db
+                  appState.selectedElement = appState.selectedElement
+                      .substring(0, appState.selectedElement.length - 2);
+                  // context.go('/element');
+                  Navigator.pop(context);
+                },
+                child: Text('Submit Comments'),
+              ),
+            ),
+          ),
         ],
       ),
     );
   }
 }
-
-// class CommentBoxWidget extends StatefulWidget {
-//   CommentBoxWidget({super.key});
-
-//   @override
-//   _CommentBoxState createState() => _CommentBoxState();
-// }
-
-// class _CommentBoxState extends State<CommentBoxWidget> {
-//   final formKey = GlobalKey<FormState>();
-//   final TextEditingController commentController = TextEditingController();
-
-//   List filedata = [
-//     {
-//       'name': 'Chuks Okwuenu',
-//       'pic': 'https://picsum.photos/300/30',
-//       'message': 'I love to code',
-//       'date': '2021-01-01 12:00:00'
-//     },
-//     {
-//       'name': 'Biggi Man',
-//       'pic': 'https://www.adeleyeayodeji.com/img/IMG_20200522_121756_834_2.jpg',
-//       'message': 'Very cool',
-//       'date': '2021-01-01 12:00:00'
-//     },
-//     {
-//       'name': 'Tunde Martins',
-//       'pic': 'assets/img/userpic.jpg',
-//       'message': 'Very cool',
-//       'date': '2021-01-01 12:00:00'
-//     },
-//     {
-//       'name': 'Biggi Man',
-//       'pic': 'https://picsum.photos/300/30',
-//       'message': 'Very cool',
-//       'date': '2021-01-01 12:00:00'
-//     },
-//   ];
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return CommentBox(
-//       // userImage: CommentBox.commentImageParser(
-//       //   imageURLorPath: "assets/img/userpic.jpg",
-//       // ),
-//       labelText: 'Add a new comment here...',
-//       errorText: 'Comment cannot be blank',
-//       withBorder: false,
-//       formKey: formKey,
-//       commentController: commentController,
-//     );
-//   }
-// }
 
 class CommentDialog extends StatefulWidget {
   const CommentDialog({super.key});
@@ -767,6 +754,7 @@ class _CommentTextButtonState extends State<CommentDialog> {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
     final TextEditingController eCtrl = TextEditingController();
+
     return TextButton(
       onPressed: () => showDialog(
         context: context,
@@ -778,7 +766,8 @@ class _CommentTextButtonState extends State<CommentDialog> {
             onSubmitted: (value) {
               appState.addComment(value);
               eCtrl.clear();
-              setState(() {});
+              // setState(() {});
+              // context.go('/comments');
               Navigator.pop(context, 'OK');
             },
             decoration: InputDecoration(
@@ -792,6 +781,7 @@ class _CommentTextButtonState extends State<CommentDialog> {
           actions: <Widget>[
             TextButton(
               onPressed: () => Navigator.pop(context, 'Cancel'),
+              // context.go('/comments'),
               child: Text('Cancel'),
             ),
             // TextButton(
