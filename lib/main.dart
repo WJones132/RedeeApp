@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:ffi';
 
 import 'package:english_words/english_words.dart';
 import 'package:comment_box/comment/comment.dart';
@@ -161,12 +162,14 @@ class MyAppState extends ChangeNotifier {
             "1": [],
             "2": [],
             "3": [],
+            "complete": false,
           },
           "B": {
             "1": [],
             "2": [],
             "3": [],
             "4": [],
+            "complete": false,
           },
           "C": {
             "1": [],
@@ -178,6 +181,7 @@ class MyAppState extends ChangeNotifier {
             "7": [],
             "8": [],
             "9": [],
+            "complete": false
           },
           "D": {
             "1": [],
@@ -193,7 +197,8 @@ class MyAppState extends ChangeNotifier {
             "11": [],
             "12": [],
             "13": [],
-            "14": []
+            "14": [],
+            "complete": false
           },
           "E": {
             "1": [],
@@ -205,6 +210,7 @@ class MyAppState extends ChangeNotifier {
             "7": [],
             "8": [],
             "9": [],
+            "complete": false
           },
         },
         "DAS": {},
@@ -218,12 +224,14 @@ class MyAppState extends ChangeNotifier {
             "1": [],
             "2": [],
             "3": [],
+            "complete": false,
           },
           "B": {
             "1": [],
             "2": [],
             "3": [],
             "4": [],
+            "complete": false,
           },
           "C": {
             "1": [],
@@ -235,6 +243,7 @@ class MyAppState extends ChangeNotifier {
             "7": [],
             "8": [],
             "9": [],
+            "complete": false
           },
           "D": {
             "1": [],
@@ -250,7 +259,8 @@ class MyAppState extends ChangeNotifier {
             "11": [],
             "12": [],
             "13": [],
-            "14": []
+            "14": [],
+            "complete": false
           },
           "E": {
             "1": [],
@@ -262,6 +272,7 @@ class MyAppState extends ChangeNotifier {
             "7": [],
             "8": [],
             "9": [],
+            "complete": false
           },
         },
         "DAS": {},
@@ -275,15 +286,17 @@ class MyAppState extends ChangeNotifier {
             "1": [],
             "2": [],
             "3": [],
+            "complete": false,
           },
           "B": {
             "1": [],
             "2": [],
             "3": [],
             "4": [],
+            "complete": false,
           },
           "C": {
-            1: [],
+            "1": [],
             "2": [],
             "3": [],
             "4": [],
@@ -292,6 +305,7 @@ class MyAppState extends ChangeNotifier {
             "7": [],
             "8": [],
             "9": [],
+            "complete": false
           },
           "D": {
             "1": [],
@@ -307,7 +321,8 @@ class MyAppState extends ChangeNotifier {
             "11": [],
             "12": [],
             "13": [],
-            "14": []
+            "14": [],
+            "complete": false
           },
           "E": {
             "1": [],
@@ -319,6 +334,7 @@ class MyAppState extends ChangeNotifier {
             "7": [],
             "8": [],
             "9": [],
+            "complete": false
           },
         },
         "DAS": {},
@@ -338,6 +354,12 @@ class MyAppState extends ChangeNotifier {
           .add(comment);
       notifyListeners();
     }
+  }
+
+  void setElementCompletionStatus(int index) {
+    bool complete = data['instructors'][selectedInstructor['id']]['CBT']
+        [selectedElement.split(" ")[1]]['complete'];
+    index == 0 ? complete = true : complete = false;
   }
 }
 
@@ -569,6 +591,56 @@ class _CheckboxExampleState extends State<CheckboxExample> {
   }
 }
 
+// Map<String, bool> yesNo = {'Yes': false, 'no': true};
+const List<Widget> yesNo = <Widget>[Text('Yes'), Text('No')];
+
+class ToggleYesNo extends StatefulWidget {
+  ToggleYesNo({super.key});
+
+  @override
+  State<ToggleYesNo> createState() => _ToggleYesNo();
+}
+
+class _ToggleYesNo extends State<ToggleYesNo> {
+  // var _selectedYesNo = <bool>[false, true];
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    var complete = appState.data['instructors']
+            [appState.selectedInstructor['id']]['CBT']
+        [appState.selectedElement.split(" ")[1]]['complete'];
+
+    Map<String, Color> yesNoColors = {
+      'Yes': Colors.green,
+      'no': Theme.of(context).colorScheme.primary
+    };
+
+    var selectedYesNo = <bool>[complete, !complete];
+
+    return Container(
+      padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+      child: ToggleButtons(
+        direction: Axis.horizontal,
+        onPressed: (int index) {
+          appState.setElementCompletionStatus(index);
+          for (int i = 0; i < 2; i++) {
+            selectedYesNo[i] = i == index;
+          }
+        },
+        borderRadius: BorderRadius.all(Radius.circular(20)),
+        isSelected: selectedYesNo,
+        // fillColor:  ?  : ,
+        constraints: BoxConstraints(
+          minHeight: 30,
+          minWidth: 60,
+        ),
+        children: yesNo,
+      ),
+    );
+  }
+}
+
 class ElementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
@@ -609,7 +681,7 @@ class ElementPage extends StatelessWidget {
                         ),
                       ),
                       Center(
-                        child: CheckboxExample(),
+                        child: ToggleYesNo(),
                       ),
                       ElevatedButton(
                         onPressed: () {
@@ -636,7 +708,6 @@ class ElementPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  // context.go('/instructor');
                   Navigator.pop(context);
                 },
                 child: Text('Submit Element'),
@@ -652,7 +723,7 @@ class ElementPage extends StatelessWidget {
 class InstructorDetailsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
-    // var appState = context.watch<MyAppState>();
+    var appState = context.watch<MyAppState>();
     return Center();
   }
 }
@@ -766,31 +837,36 @@ class _CommentTextButtonState extends State<CommentDialog> {
             onSubmitted: (value) {
               appState.addComment(value);
               eCtrl.clear();
-              // setState(() {});
-              // context.go('/comments');
-              Navigator.pop(context, 'OK');
+              Navigator.pop(context, "OK");
             },
             decoration: InputDecoration(
               hintText: "Add new comment here...",
               suffixIcon: IconButton(
-                onPressed: () {},
-                icon: Icon(Icons.check_circle_outline),
+                onPressed: () {
+                  appState.addComment(eCtrl.text);
+                  eCtrl.clear();
+                  Navigator.pop(context, "OK");
+                },
+                icon: Icon(Icons.add_comment_outlined),
               ),
             ),
           ),
           actions: <Widget>[
             TextButton(
-              onPressed: () => Navigator.pop(context, 'Cancel'),
-              // context.go('/comments'),
+              onPressed: () => {
+                Navigator.pop(context, 'Cancel'),
+                eCtrl.clear(),
+              },
               child: Text('Cancel'),
             ),
-            // TextButton(
-            //   onPressed: () {
-            //     print(commentText);
-            //     Navigator.pop(context, 'OK');
-            //   },
-            //   child: Text('Save'),
-            // ),
+            TextButton(
+              onPressed: () {
+                appState.addComment(eCtrl.text);
+                eCtrl.clear();
+                Navigator.pop(context, "OK");
+              },
+              child: Text('Save'),
+            ),
           ],
         ),
       ),
