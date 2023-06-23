@@ -1,20 +1,16 @@
-import 'dart:async';
-import 'dart:ffi';
-
-import 'package:english_words/english_words.dart';
-import 'package:comment_box/comment/comment.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
+import 'package:toggle_switch/toggle_switch.dart';
 import 'dart:io' show Platform;
 
 void main() async {
   // if (!Platform.isLinux && !Platform.isWindows) {
-  // await Firebase.initializeApp(
-  //   options: DefaultFirebaseOptions.currentPlatform,
-  // );
+  //   await Firebase.initializeApp(
+  //     options: DefaultFirebaseOptions.currentPlatform,
+  //   );
   // }
   runApp(MyApp());
 }
@@ -99,10 +95,13 @@ class MyAppState extends ChangeNotifier {
   //   notifyListeners();
   // }
 
-  // var instructors = <String>[];
   var selectedInstructor = {};
   var selectedElement = "";
-  // var data = <List<List<List<List, String>>>>{};
+  var selectedCommentIndex = 0;
+  var elementCompletion = 1;
+  List<int> completeElements = [1, 1, 1, 1, 1];
+  String commentDialogTitle = 'New comment';
+
   Map data = {
     "elements": {
       "A": [
@@ -158,60 +157,177 @@ class MyAppState extends ChangeNotifier {
     "instructors": {
       "7d951eb1-ad1d-4b8a-9090-45e535f0e59b": {
         "CBT": {
-          "A": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "complete": false,
-          },
-          "B": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "complete": false,
-          },
-          "C": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "complete": false
-          },
-          "D": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "10": [],
-            "11": [],
-            "12": [],
-            "13": [],
-            "14": [],
-            "complete": false
-          },
-          "E": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "complete": false
-          },
+          "A": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "B": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "C": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "D": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "E": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
         },
         "DAS": {},
         "email": "inst1@email.com",
@@ -220,60 +336,177 @@ class MyAppState extends ChangeNotifier {
       },
       "3101bc97-c6d8-4529-94a9-2c163d163cd4": {
         "CBT": {
-          "A": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "complete": false,
-          },
-          "B": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "complete": false,
-          },
-          "C": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "complete": false
-          },
-          "D": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "10": [],
-            "11": [],
-            "12": [],
-            "13": [],
-            "14": [],
-            "complete": false
-          },
-          "E": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "complete": false
-          },
+          "A": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "B": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "C": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "D": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "E": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
         },
         "DAS": {},
         "email": "inst2@email.com",
@@ -282,60 +515,177 @@ class MyAppState extends ChangeNotifier {
       },
       "cee2fbd2-6f64-4422-8a0a-4322f7146073": {
         "CBT": {
-          "A": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "complete": false,
-          },
-          "B": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "complete": false,
-          },
-          "C": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "complete": false
-          },
-          "D": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "10": [],
-            "11": [],
-            "12": [],
-            "13": [],
-            "14": [],
-            "complete": false
-          },
-          "E": {
-            "1": [],
-            "2": [],
-            "3": [],
-            "4": [],
-            "5": [],
-            "6": [],
-            "7": [],
-            "8": [],
-            "9": [],
-            "complete": false
-          },
+          "A": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "B": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "C": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "D": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
+          "E": [
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            {
+              "complete": 1,
+              'comments': [],
+            },
+            1
+          ],
         },
         "DAS": {},
         "email": "inst3@email.com",
@@ -345,21 +695,82 @@ class MyAppState extends ChangeNotifier {
     },
   };
 
-  List<String> comments = [];
-
-  void addComment(String comment) {
-    if (comment.isNotEmpty) {
-      data['instructors'][selectedInstructor['id']]['CBT']
-              [selectedElement.split(" ")[1]][selectedElement.split(" ").last]
-          .add(comment);
-      notifyListeners();
+  void fixElement() {
+    if ([
+      '1',
+      '2',
+      '3',
+      '4',
+      '5',
+      '6',
+      '7',
+      '8',
+      '9',
+      '10',
+      '11',
+      '12',
+      '13',
+      '14',
+    ].any(selectedElement.contains)) {
+      var s = selectedElement.split(" ");
+      selectedElement = "${s[0]} ${s[1]}";
     }
   }
 
-  void setElementCompletionStatus(int index) {
-    bool complete = data['instructors'][selectedInstructor['id']]['CBT']
-        [selectedElement.split(" ")[1]]['complete'];
-    index == 0 ? complete = true : complete = false;
+  String editOrSave = "save";
+
+  void editOrSaveComment(String comment, [int index = -1]) {
+    if (editOrSave.toLowerCase() == "edit") {
+      // edit comment
+      data['instructors'][selectedInstructor['id']]['CBT']
+                  [selectedElement.split(" ")[1]]
+              [int.parse(selectedElement.split(" ").last)]['comments']
+          [selectedCommentIndex] = comment;
+    } else if (editOrSave.toLowerCase() == "save") {
+      if (comment.isNotEmpty) {
+        data['instructors'][selectedInstructor['id']]['CBT']
+                    [selectedElement.split(" ")[1]]
+                [int.parse(selectedElement.split(" ").last)]['comments']
+            .add(comment);
+      }
+    }
+    editOrSave = "save";
+    commentDialogTitle = 'New comment';
+    notifyListeners();
+  }
+
+  void deleteComment(int index) {
+    data['instructors'][selectedInstructor['id']]['CBT']
+                [selectedElement.split(" ")[1]]
+            [int.parse(selectedElement.split(" ").last)]['comments']
+        .removeAt(index);
+
+    notifyListeners();
+  }
+
+  void setStatusCompletion(int index, int yesNo) {
+    data['instructors'][selectedInstructor['id']]['CBT']
+        [selectedElement.split(" ")[1]][index]['complete'] = yesNo;
+
+    setElementCompletion();
+
+    notifyListeners();
+  }
+
+  void setElementCompletion() {
+    var complete = true;
+    var letters = ['A', 'B', 'C', 'D', 'E'];
+    var elementsComplete = data['instructors'][selectedInstructor['id']]['CBT'];
+
+    for (var i = 0; i < letters.length; i++) {
+      for (var j = 0; j < elementsComplete[letters[i]].length - 1; j++) {
+        if (elementsComplete[letters[i]][j]['complete'] == 1) {
+          complete = false;
+        }
+      }
+      complete ? completeElements[i] = 0 : completeElements[i] = 1;
+      complete = true;
+    }
   }
 }
 
@@ -492,13 +903,6 @@ class InstructorPage extends StatelessWidget {
       'Element E',
     ];
 
-    // if (appState.selectedInstructor == "") {
-    //   Navigator.popUntil(
-    //     context,
-    //     ModalRoute.withName('/selectInstructor'),
-    //   );
-    // }
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -534,9 +938,16 @@ class InstructorPage extends StatelessWidget {
                           child: Text(elements[index]),
                         ),
                         Spacer(),
-                        Checkbox(
-                          value: false,
-                          onChanged: null,
+                        ToggleSwitch(
+                          changeOnTap: false,
+                          totalSwitches: 1,
+                          labels: ['Complete'],
+                          minWidth: 90,
+                          minHeight: 30,
+                          activeBgColors: [
+                            [Colors.greenAccent, Colors.green]
+                          ],
+                          initialLabelIndex: appState.completeElements[index],
                         ),
                       ],
                     ),
@@ -602,7 +1013,7 @@ class ToggleYesNo extends StatefulWidget {
 }
 
 class _ToggleYesNo extends State<ToggleYesNo> {
-  // var _selectedYesNo = <bool>[false, true];
+  var _selectedYesNo = <bool>[false, true];
 
   @override
   Widget build(BuildContext context) {
@@ -611,25 +1022,20 @@ class _ToggleYesNo extends State<ToggleYesNo> {
             [appState.selectedInstructor['id']]['CBT']
         [appState.selectedElement.split(" ")[1]]['complete'];
 
-    Map<String, Color> yesNoColors = {
-      'Yes': Colors.green,
-      'no': Theme.of(context).colorScheme.primary
-    };
-
-    var selectedYesNo = <bool>[complete, !complete];
-
     return Container(
       padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
       child: ToggleButtons(
         direction: Axis.horizontal,
         onPressed: (int index) {
-          appState.setElementCompletionStatus(index);
-          for (int i = 0; i < 2; i++) {
-            selectedYesNo[i] = i == index;
-          }
+          appState.setStatusCompletion(index, 0);
+          setState(() {
+            for (int i = 0; i < 2; i++) {
+              _selectedYesNo[i] = i == index;
+            }
+          });
         },
         borderRadius: BorderRadius.all(Radius.circular(20)),
-        isSelected: selectedYesNo,
+        isSelected: _selectedYesNo,
         // fillColor:  ?  : ,
         constraints: BoxConstraints(
           minHeight: 30,
@@ -645,11 +1051,6 @@ class ElementPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-
-    // if (appState.selectedInstructor == "") {
-    //   Navigator.of(context).pushNamedAndRemoveUntil(
-    //       '/selectInstructor', (Route<dynamic> route) => false);
-    // }
 
     return Scaffold(
       appBar: AppBar(
@@ -681,17 +1082,42 @@ class ElementPage extends StatelessWidget {
                         ),
                       ),
                       Center(
-                        child: ToggleYesNo(),
+                        // child: ToggleYesNo(),
+                        child: Container(
+                          padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
+                          child: ToggleSwitch(
+                            totalSwitches: 2,
+                            labels: ['Complete', ''],
+                            icons: [null, Icons.close],
+                            customWidths: [90, 50],
+                            minHeight: 30,
+                            activeBgColors: [
+                              [Colors.greenAccent, Colors.green],
+                              [Colors.redAccent, Colors.red]
+                            ],
+                            initialLabelIndex: appState.data['instructors']
+                                            [appState.selectedInstructor['id']]
+                                        ['CBT']
+                                    [appState.selectedElement.split(" ")[1]]
+                                [index]['complete'],
+                            onToggle: (yesNo) {
+                              appState.setStatusCompletion(
+                                index,
+                                yesNo!,
+                              );
+                            },
+                          ),
+                        ),
                       ),
                       ElevatedButton(
                         onPressed: () {
                           appState.selectedElement =
-                              "${appState.selectedElement} ${(index + 1).toString()}";
+                              "${appState.selectedElement} ${(index).toString()}";
                           // context.go('/comments');
                           Navigator.pushNamed(context, '/comments');
                         },
                         child: Text(
-                          'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][(index + 1).toString()].length}]',
+                          'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][index]['comments'].length}]',
                         ),
                       ),
                     ],
@@ -708,7 +1134,7 @@ class ElementPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  Navigator.pop(context);
+                  Navigator.pop(context, true);
                 },
                 child: Text('Submit Element'),
               ),
@@ -737,15 +1163,15 @@ class DyanmicList extends State<ListDisplay> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    var commentText = appState.data['instructors']
+                [appState.selectedInstructor['id']]['CBT']
+            [appState.selectedElement.split(" ")[1]]
+        [int.parse(appState.selectedElement.split(" ").last)]['comments'];
 
     return ListView.separated(
       padding: const EdgeInsets.all(20),
       shrinkWrap: true,
-      itemCount: appState
-          .data['instructors']![appState.selectedInstructor['id']]['CBT']
-              [appState.selectedElement.split(" ")[1]]
-              [appState.selectedElement.split(" ").last]
-          ?.length,
+      itemCount: commentText?.length,
       separatorBuilder: (context, index) => const Divider(),
       itemBuilder: (context, index) {
         return Material(
@@ -753,12 +1179,27 @@ class DyanmicList extends State<ListDisplay> {
             children: [
               Expanded(
                 child: Text(
-                  appState.data['instructors']
-                              [appState.selectedInstructor['id']]['CBT']
-                          [appState.selectedElement.split(" ")[1]]
-                      [appState.selectedElement.split(" ").last][index],
+                  commentText[index],
                   softWrap: true,
                 ),
+              ),
+              Spacer(),
+              IconButton(
+                onPressed: () {
+                  final TextEditingController eCtrl = TextEditingController();
+                  appState.commentDialogTitle = 'Edit comment';
+                  appState.editOrSave = "Edit";
+                  appState.selectedCommentIndex = index;
+                  showCommentDialog(
+                      context, appState, eCtrl, commentText[index]);
+                },
+                icon: Icon(Icons.edit),
+              ),
+              IconButton(
+                onPressed: () {
+                  appState.deleteComment(index);
+                },
+                icon: Icon(Icons.delete),
               ),
             ],
           ),
@@ -772,6 +1213,7 @@ class CommentsPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+    appState.editOrSave = 'Save';
 
     return Scaffold(
       appBar: AppBar(
@@ -795,8 +1237,6 @@ class CommentsPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  appState.selectedElement = appState.selectedElement
-                      .substring(0, appState.selectedElement.length - 2);
                   // context.go('/element');
                   Navigator.pop(context);
                 },
@@ -827,52 +1267,57 @@ class _CommentTextButtonState extends State<CommentDialog> {
     final TextEditingController eCtrl = TextEditingController();
 
     return TextButton(
-      onPressed: () => showDialog(
-        context: context,
-        builder: (BuildContext context) => AlertDialog(
-          title: Text('New comment'),
-          content: TextField(
-            textInputAction: TextInputAction.go,
-            controller: eCtrl,
-            onSubmitted: (value) {
-              appState.addComment(value);
-              eCtrl.clear();
-              Navigator.pop(context, "OK");
-            },
-            decoration: InputDecoration(
-              hintText: "Add new comment here...",
-              suffixIcon: IconButton(
-                onPressed: () {
-                  appState.addComment(eCtrl.text);
-                  eCtrl.clear();
-                  Navigator.pop(context, "OK");
-                },
-                icon: Icon(Icons.add_comment_outlined),
-              ),
-            ),
-          ),
-          actions: <Widget>[
-            TextButton(
-              onPressed: () => {
-                Navigator.pop(context, 'Cancel'),
-                eCtrl.clear(),
-              },
-              child: Text('Cancel'),
-            ),
-            TextButton(
-              onPressed: () {
-                appState.addComment(eCtrl.text);
-                eCtrl.clear();
-                Navigator.pop(context, "OK");
-              },
-              child: Text('Save'),
-            ),
-          ],
-        ),
-      ),
+      onPressed: () => showCommentDialog(context, appState, eCtrl, ""),
       child: Text('Add comment'),
     );
   }
+}
+
+Future<dynamic> showCommentDialog(BuildContext context, MyAppState appState,
+    TextEditingController eCtrl, String initText) {
+  return showDialog(
+    context: context,
+    builder: (BuildContext context) => AlertDialog(
+      title: Text(appState.commentDialogTitle),
+      content: TextField(
+        textInputAction: TextInputAction.go,
+        controller: eCtrl..text = initText,
+        onSubmitted: (value) {
+          appState.editOrSaveComment(value);
+          eCtrl.clear();
+          Navigator.pop(context, "OK");
+        },
+        decoration: InputDecoration(
+          hintText: "Add new comment here...",
+          suffixIcon: IconButton(
+            onPressed: () {
+              appState.editOrSaveComment(eCtrl.text);
+              eCtrl.clear();
+              Navigator.pop(context, "OK");
+            },
+            icon: Icon(Icons.add_comment_outlined),
+          ),
+        ),
+      ),
+      actions: <Widget>[
+        TextButton(
+          onPressed: () => {
+            Navigator.pop(context, 'Cancel'),
+            eCtrl.clear(),
+          },
+          child: Text('Cancel'),
+        ),
+        TextButton(
+          onPressed: () {
+            appState.editOrSaveComment(eCtrl.text);
+            eCtrl.clear();
+            Navigator.pop(context, "OK");
+          },
+          child: Text(appState.editOrSave),
+        ),
+      ],
+    ),
+  );
 }
 
 // OLD
