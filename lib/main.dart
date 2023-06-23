@@ -720,14 +720,14 @@ class MyAppState extends ChangeNotifier {
   String editOrSave = "save";
 
   void editOrSaveComment(String comment, [int index = -1]) {
-    if (editOrSave.toLowerCase() == "edit") {
-      // edit comment
-      data['instructors'][selectedInstructor['id']]['CBT']
-                  [selectedElement.split(" ")[1]]
-              [int.parse(selectedElement.split(" ").last)]['comments']
-          [selectedCommentIndex] = comment;
-    } else if (editOrSave.toLowerCase() == "save") {
-      if (comment.isNotEmpty) {
+    if (comment.isNotEmpty) {
+      if (editOrSave.toLowerCase() == "edit") {
+        // edit comment
+        data['instructors'][selectedInstructor['id']]['CBT']
+                    [selectedElement.split(" ")[1]]
+                [int.parse(selectedElement.split(" ").last)]['comments']
+            [selectedCommentIndex] = comment;
+      } else if (editOrSave.toLowerCase() == "save") {
         data['instructors'][selectedInstructor['id']]['CBT']
                     [selectedElement.split(" ")[1]]
                 [int.parse(selectedElement.split(" ").last)]['comments']
@@ -1301,9 +1301,10 @@ Future<dynamic> showCommentDialog(BuildContext context, MyAppState appState,
       ),
       actions: <Widget>[
         TextButton(
-          onPressed: () => {
-            Navigator.pop(context, 'Cancel'),
-            eCtrl.clear(),
+          onPressed: () {
+            appState.commentDialogTitle = "New comment";
+            Navigator.pop(context, 'Cancel');
+            eCtrl.clear();
           },
           child: Text('Cancel'),
         ),
@@ -1317,7 +1318,9 @@ Future<dynamic> showCommentDialog(BuildContext context, MyAppState appState,
         ),
       ],
     ),
-  );
+  ).then((value) {
+    appState.commentDialogTitle = "New comment";
+  });
 }
 
 // OLD
