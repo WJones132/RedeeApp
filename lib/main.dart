@@ -722,7 +722,6 @@ class MyAppState extends ChangeNotifier {
   void editOrSaveComment(String comment, [int index = -1]) {
     if (comment.isNotEmpty) {
       if (editOrSave.toLowerCase() == "edit") {
-        // edit comment
         data['instructors'][selectedInstructor['id']]['CBT']
                     [selectedElement.split(" ")[1]]
                 [int.parse(selectedElement.split(" ").last)]['comments']
@@ -1018,9 +1017,6 @@ class _ToggleYesNo extends State<ToggleYesNo> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var complete = appState.data['instructors']
-            [appState.selectedInstructor['id']]['CBT']
-        [appState.selectedElement.split(" ")[1]]['complete'];
 
     return Container(
       padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
@@ -1081,44 +1077,51 @@ class ElementPage extends StatelessWidget {
                           softWrap: true,
                         ),
                       ),
-                      Center(
-                        // child: ToggleYesNo(),
-                        child: Container(
-                          padding: EdgeInsets.fromLTRB(0, 0, 10, 0),
-                          child: ToggleSwitch(
-                            totalSwitches: 2,
-                            labels: ['Complete', ''],
-                            icons: [null, Icons.close],
-                            customWidths: [90, 50],
-                            minHeight: 30,
-                            activeBgColors: [
-                              [Colors.greenAccent, Colors.green],
-                              [Colors.redAccent, Colors.red]
-                            ],
-                            initialLabelIndex: appState.data['instructors']
+                      Column(
+                        children: [
+                          Center(
+                            // child: ToggleYesNo(),
+                            child: Container(
+                              padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                              child: ToggleSwitch(
+                                totalSwitches: 2,
+                                labels: ['Complete', ''],
+                                icons: [null, Icons.close],
+                                customWidths: [92, 47],
+                                minHeight: 30,
+                                activeBgColors: [
+                                  [Colors.greenAccent, Colors.green],
+                                  [Colors.redAccent, Colors.red]
+                                ],
+                                initialLabelIndex: appState.data['instructors']
                                             [appState.selectedInstructor['id']]
-                                        ['CBT']
-                                    [appState.selectedElement.split(" ")[1]]
-                                [index]['complete'],
-                            onToggle: (yesNo) {
-                              appState.setStatusCompletion(
-                                index,
-                                yesNo!,
-                              );
-                            },
+                                        ['CBT'][
+                                    appState.selectedElement
+                                        .split(" ")[1]][index]['complete'],
+                                onToggle: (yesNo) {
+                                  appState.setStatusCompletion(
+                                    index,
+                                    yesNo!,
+                                  );
+                                },
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                      ElevatedButton(
-                        onPressed: () {
-                          appState.selectedElement =
-                              "${appState.selectedElement} ${(index).toString()}";
-                          // context.go('/comments');
-                          Navigator.pushNamed(context, '/comments');
-                        },
-                        child: Text(
-                          'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][index]['comments'].length}]',
-                        ),
+                          SizedBox(
+                            width: 139,
+                            child: ElevatedButton(
+                              onPressed: () {
+                                appState.selectedElement =
+                                    "${appState.selectedElement} ${(index).toString()}";
+                                // context.go('/comments');
+                                Navigator.pushNamed(context, '/comments');
+                              },
+                              child: Text(
+                                'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][index]['comments'].length}]',
+                              ),
+                            ),
+                          ),
+                        ],
                       ),
                     ],
                   ),
