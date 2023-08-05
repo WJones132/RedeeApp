@@ -49,8 +49,7 @@ class DefaultFirebaseOptions {
     messagingSenderId: '124991237466',
     projectId: 'redee-b3df9',
     authDomain: 'redee-b3df9.firebaseapp.com',
-    databaseURL:
-        'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
+    databaseURL: 'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'redee-b3df9.appspot.com',
     measurementId: 'G-WDJCNK7YXC',
   );
@@ -60,8 +59,7 @@ class DefaultFirebaseOptions {
     appId: '1:124991237466:android:f74b14f39ea66c46641763',
     messagingSenderId: '124991237466',
     projectId: 'redee-b3df9',
-    databaseURL:
-        'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
+    databaseURL: 'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'redee-b3df9.appspot.com',
   );
 
@@ -70,11 +68,9 @@ class DefaultFirebaseOptions {
     appId: '1:124991237466:ios:58fb981696262d2f641763',
     messagingSenderId: '124991237466',
     projectId: 'redee-b3df9',
-    databaseURL:
-        'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
+    databaseURL: 'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'redee-b3df9.appspot.com',
-    iosClientId:
-        '124991237466-fsb3nfgft5h32jq6im7cqolohr0j75il.apps.googleusercontent.com',
+    iosClientId: '124991237466-fsb3nfgft5h32jq6im7cqolohr0j75il.apps.googleusercontent.com',
     iosBundleId: 'com.example.redeeApp',
   );
 
@@ -83,11 +79,9 @@ class DefaultFirebaseOptions {
     appId: '1:124991237466:ios:6595ca5e0342b8be641763',
     messagingSenderId: '124991237466',
     projectId: 'redee-b3df9',
-    databaseURL:
-        'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
+    databaseURL: 'https://redee-b3df9-default-rtdb.europe-west1.firebasedatabase.app',
     storageBucket: 'redee-b3df9.appspot.com',
-    iosClientId:
-        '124991237466-3cg9ie00k73hp00ak2l89el610hith2t.apps.googleusercontent.com',
+    iosClientId: '124991237466-3cg9ie00k73hp00ak2l89el610hith2t.apps.googleusercontent.com',
     iosBundleId: 'com.example.redeeApp.RunnerTests',
   );
 }

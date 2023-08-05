@@ -1,17 +1,65 @@
+import 'dart:js_interop';
+
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'package:go_router/go_router.dart';
+// import 'package:go_router/go_router.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
 import 'package:toggle_switch/toggle_switch.dart';
 import 'dart:io' show Platform;
+import 'package:flutter/foundation.dart' show kIsWeb;
+
+late FirebaseDatabase database;
+late DatabaseReference instructorsRef;
+late DatabaseReference elementsCBTRef;
+List instructors = [];
+List elementsCBT = [];
+List elementsDAS = [];
+String cbtOrDas = "CBT";
+
+void initFireDatabase() async {
+  database = FirebaseDatabase.instance;
+
+  instructorsRef = database.ref().child('Instructors');
+  instructorsRef.onValue.listen((DatabaseEvent event) {
+    instructors.clear();
+    for (final child in event.snapshot.children) {
+      print(child.value);
+      instructors.add(child.value);
+    }
+  });
+
+  elementsCBTRef = database.ref().child('Elements/CBT');
+  elementsCBTRef.onValue.listen((DatabaseEvent event) {
+    for (final child in event.snapshot.children) {
+      elementsCBT.add(child.value);
+    }
+  });
+
+  // Uncomment when DAS integrated
+  // DatabaseReference elementsDASRef =
+  //     FirebaseDatabase.instance.ref().child('Elements/CBT');
+  // elementsDASRef.onValue.listen((DatabaseEvent event) {
+  //   for (final child in event.snapshot.children) {
+  //     elementsDAS.add(child.value);
+  //   }
+  // });
+}
 
 void main() async {
-  // if (!Platform.isLinux && !Platform.isWindows) {
-  //   await Firebase.initializeApp(
-  //     options: DefaultFirebaseOptions.currentPlatform,
-  //   );
-  // }
+  if (kIsWeb) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.web,
+    );
+    initFireDatabase();
+  } else if (!Platform.isLinux && !Platform.isWindows) {
+    await Firebase.initializeApp(
+      options: DefaultFirebaseOptions.currentPlatform,
+    );
+    initFireDatabase();
+  }
+
   runApp(MyApp());
 }
 
@@ -95,12 +143,16 @@ class MyAppState extends ChangeNotifier {
   //   notifyListeners();
   // }
 
-  var selectedInstructor = {};
-  var selectedElement = "";
-  var selectedCommentIndex = 0;
-  var elementCompletion = 1;
-  List<int> completeElements = [1, 1, 1, 1, 1];
+  late int selectedInstructor;
+  late int selectedCommentIndex;
+  late int elementCompletion;
+  late Map selectedInstructorDetails;
+  late String selectedElement;
+  late String selectedComment;
   String commentDialogTitle = 'New comment';
+  String editOrSave = "save";
+
+  // List instructors = [];
 
   Map data = {
     "elements": {
@@ -695,42 +747,30 @@ class MyAppState extends ChangeNotifier {
     },
   };
 
-  void fixElement() {
-    if ([
-      '1',
-      '2',
-      '3',
-      '4',
-      '5',
-      '6',
-      '7',
-      '8',
-      '9',
-      '10',
-      '11',
-      '12',
-      '13',
-      '14',
-    ].any(selectedElement.contains)) {
-      var s = selectedElement.split(" ");
-      selectedElement = "${s[0]} ${s[1]}";
+  void editOrSaveComment(String comment, [int index = -1]) async {
+    DatabaseReference ref = database.ref(
+        "Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/$selectedComment/comments");
+
+    if (ref.isUndefinedOrNull) {
+      await ref.update({
+        "comments": "",
+      });
     }
-  }
 
-  String editOrSave = "save";
-
-  void editOrSaveComment(String comment, [int index = -1]) {
     if (comment.isNotEmpty) {
       if (editOrSave.toLowerCase() == "edit") {
-        data['instructors'][selectedInstructor['id']]['CBT']
-                    [selectedElement.split(" ")[1]]
-                [int.parse(selectedElement.split(" ").last)]['comments']
-            [selectedCommentIndex] = comment;
+        await ref.update({
+          '$index': comment,
+        });
       } else if (editOrSave.toLowerCase() == "save") {
-        data['instructors'][selectedInstructor['id']]['CBT']
-                    [selectedElement.split(" ")[1]]
-                [int.parse(selectedElement.split(" ").last)]['comments']
-            .add(comment);
+        int max = instructors[selectedInstructor][cbtOrDas]
+                    [selectedElement[selectedElement.length - 1]]
+                [selectedComment]['comments']
+            .length;
+
+        await ref.update({
+          '$max': comment,
+        });
       }
     }
     editOrSave = "save";
@@ -738,38 +778,37 @@ class MyAppState extends ChangeNotifier {
     notifyListeners();
   }
 
-  void deleteComment(int index) {
-    data['instructors'][selectedInstructor['id']]['CBT']
-                [selectedElement.split(" ")[1]]
-            [int.parse(selectedElement.split(" ").last)]['comments']
-        .removeAt(index);
+  void deleteComment(int index) async {
+    DatabaseReference ref = database.ref(
+        "Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/$selectedComment/comments");
+
+    await ref.update({
+      '$index': null,
+    });
 
     notifyListeners();
   }
 
-  void setStatusCompletion(int index, int yesNo) {
-    data['instructors'][selectedInstructor['id']]['CBT']
-        [selectedElement.split(" ")[1]][index]['complete'] = yesNo;
+  void setStatusCompletion(int index, int yesNo) async {
+    DatabaseReference ref = database.ref();
 
-    setElementCompletion();
+    await ref.update({
+      'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/${index.toString()}/complete':
+          yesNo
+    });
 
     notifyListeners();
   }
 
-  void setElementCompletion() {
-    var complete = true;
-    var letters = ['A', 'B', 'C', 'D', 'E'];
-    var elementsComplete = data['instructors'][selectedInstructor['id']]['CBT'];
+  void submitElement() async {
+    DatabaseReference ref = database.ref();
 
-    for (var i = 0; i < letters.length; i++) {
-      for (var j = 0; j < elementsComplete[letters[i]].length - 1; j++) {
-        if (elementsComplete[letters[i]][j]['complete'] == 1) {
-          complete = false;
-        }
-      }
-      complete ? completeElements[i] = 0 : completeElements[i] = 1;
-      complete = true;
-    }
+    await ref.update({
+      'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/complete':
+          0
+    });
+
+    notifyListeners();
   }
 }
 
@@ -855,15 +894,15 @@ class SelectInstructorPage extends StatelessWidget {
           Expanded(
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
-              itemCount: appState.data['instructors'].length,
+              itemCount: instructors.length,
               separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
                 return Material(
                   // color: Colors.amber[codes[index]],
                   child: InkWell(
                     onTap: () => {
-                      appState.selectedInstructor =
-                          appState.data['instructors'].values.elementAt(index),
+                      appState.selectedInstructor = index,
+                      appState.selectedInstructorDetails = instructors[index],
                       // context.go('/instructor'),
                       Navigator.pushNamed(
                         context,
@@ -874,8 +913,7 @@ class SelectInstructorPage extends StatelessWidget {
                       padding: EdgeInsets.fromLTRB(20, 0, 0, 0),
                       alignment: Alignment.centerLeft,
                       height: 50,
-                      child: Text(appState.data['instructors'].values
-                          .elementAt(index)['name']),
+                      child: Text(instructors[index]['name']),
                     ),
                   ),
                 );
@@ -902,10 +940,12 @@ class InstructorPage extends StatelessWidget {
       'Element E',
     ];
 
+    print(appState.selectedInstructor);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
-        title: Text(appState.selectedInstructor['name']),
+        title: Text(instructors[appState.selectedInstructor]['name']),
       ),
       body: Column(
         mainAxisAlignment: MainAxisAlignment.center,
@@ -946,7 +986,9 @@ class InstructorPage extends StatelessWidget {
                           activeBgColors: [
                             [Colors.greenAccent, Colors.green]
                           ],
-                          initialLabelIndex: appState.completeElements[index],
+                          initialLabelIndex:
+                              instructors[appState.selectedInstructor][cbtOrDas]
+                                  [String.fromCharCode(index + 65)]['complete'],
                         ),
                       ],
                     ),
@@ -963,11 +1005,10 @@ class InstructorPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  // appState.selectedInstructor = {};
-                  // context.go('/selectedInstructor');
+
                   Navigator.pop(context);
                 },
-                child: Text('Submit Element'),
+                child: Text('Submit Report'),
               ),
             ),
           ),
@@ -1032,7 +1073,6 @@ class _ToggleYesNo extends State<ToggleYesNo> {
         },
         borderRadius: BorderRadius.all(Radius.circular(20)),
         isSelected: _selectedYesNo,
-        // fillColor:  ?  : ,
         constraints: BoxConstraints(
           minHeight: 30,
           minWidth: 60,
@@ -1048,11 +1088,13 @@ class ElementPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
+    print(appState.selectedElement);
+
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          '${appState.selectedInstructor['name']} - ${appState.selectedElement}',
+          '${instructors[appState.selectedInstructor]['name']} - ${appState.selectedElement}',
         ),
       ),
       body: Column(
@@ -1062,8 +1104,10 @@ class ElementPage extends StatelessWidget {
             child: ListView.separated(
               padding: const EdgeInsets.all(20),
               shrinkWrap: true,
-              itemCount: appState
-                  .data['elements'][appState.selectedElement.split(" ")[1]]
+              itemCount: elementsCBT[appState
+                          .selectedElement[appState.selectedElement.length - 1]
+                          .codeUnits[0] -
+                      65]
                   .length,
               separatorBuilder: (context, index) => const Divider(),
               itemBuilder: (context, index) {
@@ -1072,57 +1116,67 @@ class ElementPage extends StatelessWidget {
                     children: [
                       Expanded(
                         child: Text(
-                          appState.data['elements']![
-                              appState.selectedElement.split(" ")[1]][index],
+                          elementsCBT[appState
+                                  .selectedElement[
+                                      appState.selectedElement.length - 1]
+                                  .codeUnits[0] -
+                              65][index],
                           softWrap: true,
                         ),
                       ),
-                      Column(
-                        children: [
-                          Center(
-                            // child: ToggleYesNo(),
-                            child: Container(
-                              padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
-                              child: ToggleSwitch(
-                                totalSwitches: 2,
-                                labels: ['Complete', ''],
-                                icons: [null, Icons.close],
-                                customWidths: [92, 47],
-                                minHeight: 30,
-                                activeBgColors: [
-                                  [Colors.greenAccent, Colors.green],
-                                  [Colors.redAccent, Colors.red]
-                                ],
-                                initialLabelIndex: appState.data['instructors']
-                                            [appState.selectedInstructor['id']]
-                                        ['CBT'][
-                                    appState.selectedElement
-                                        .split(" ")[1]][index]['complete'],
-                                onToggle: (yesNo) {
-                                  appState.setStatusCompletion(
-                                    index,
-                                    yesNo!,
-                                  );
+                      LayoutBuilder(builder: (context, constraints) {
+                        bool useVerticalLayout =
+                            MediaQuery.of(context).size.width <= 600;
+                        return Flex(
+                          direction: useVerticalLayout
+                              ? Axis.vertical
+                              : Axis.horizontal,
+                          children: [
+                            Center(
+                              child: Container(
+                                padding: EdgeInsets.fromLTRB(0, 0, 0, 5),
+                                child: ToggleSwitch(
+                                  totalSwitches: 2,
+                                  labels: ['Complete', ''],
+                                  icons: [null, Icons.close],
+                                  customWidths: [92, 47],
+                                  minHeight: 30,
+                                  activeBgColors: [
+                                    [Colors.greenAccent, Colors.green],
+                                    [Colors.redAccent, Colors.red],
+                                  ],
+                                  initialLabelIndex:
+                                      instructors[appState.selectedInstructor]
+                                          [cbtOrDas][appState
+                                              .selectedElement[
+                                          appState.selectedElement.length -
+                                              1]][index.toString()]['complete'],
+                                  onToggle: (yesNo) {
+                                    appState.setStatusCompletion(
+                                      index,
+                                      yesNo!,
+                                    );
+                                  },
+                                ),
+                              ),
+                            ),
+                            SizedBox(
+                              width: 139,
+                              child: ElevatedButton(
+                                onPressed: () {
+                                  appState.selectedComment = index.toString();
+                                  // context.go('/comments');
+                                  Navigator.pushNamed(context, '/comments');
                                 },
+                                child: Text(
+                                    'Comments [${instructors[appState.selectedInstructor][cbtOrDas][appState.selectedElement[appState.selectedElement.length - 1]][index.toString()]['comments'].length}]'
+                                    // 'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][index]['comments'].length}]',
+                                    ),
                               ),
                             ),
-                          ),
-                          SizedBox(
-                            width: 139,
-                            child: ElevatedButton(
-                              onPressed: () {
-                                appState.selectedElement =
-                                    "${appState.selectedElement} ${(index).toString()}";
-                                // context.go('/comments');
-                                Navigator.pushNamed(context, '/comments');
-                              },
-                              child: Text(
-                                'Comments [${appState.data['instructors'][appState.selectedInstructor['id']]['CBT'][appState.selectedElement.split(" ")[1]][index]['comments'].length}]',
-                              ),
-                            ),
-                          ),
-                        ],
-                      ),
+                          ],
+                        );
+                      })
                     ],
                   ),
                 );
@@ -1137,7 +1191,8 @@ class ElementPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  Navigator.pop(context, true);
+                  appState.submitElement();
+                  Navigator.pop(context);
                 },
                 child: Text('Submit Element'),
               ),
@@ -1166,10 +1221,13 @@ class DyanmicList extends State<ListDisplay> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    var commentText = appState.data['instructors']
-                [appState.selectedInstructor['id']]['CBT']
-            [appState.selectedElement.split(" ")[1]]
-        [int.parse(appState.selectedElement.split(" ").last)]['comments'];
+    // var commentText = appState.data['instructors'][appState.selectedInstructor]
+    //         ['id'][cbtOrDas][appState.selectedElement.split(" ")[1]]
+    //     [int.parse(appState.selectedElement.split(" ").last)]['comments'];
+
+    var commentText = instructors[appState.selectedInstructor][cbtOrDas]
+            [appState.selectedElement[appState.selectedElement.length - 1]]
+        [appState.selectedComment]['comments'];
 
     return ListView.separated(
       padding: const EdgeInsets.all(20),
@@ -1194,7 +1252,7 @@ class DyanmicList extends State<ListDisplay> {
                   appState.editOrSave = "Edit";
                   appState.selectedCommentIndex = index;
                   showCommentDialog(
-                      context, appState, eCtrl, commentText[index]);
+                      context, appState, eCtrl, commentText[index], index);
                 },
                 icon: Icon(Icons.edit),
               ),
@@ -1222,7 +1280,7 @@ class CommentsPage extends StatelessWidget {
       appBar: AppBar(
         centerTitle: true,
         title: Text(
-          '${appState.selectedInstructor['name']} - ${appState.selectedElement}',
+          '${instructors[appState.selectedInstructor]['name']} - ${appState.selectedElement}',
         ),
       ),
       body: Column(
@@ -1270,14 +1328,14 @@ class _CommentTextButtonState extends State<CommentDialog> {
     final TextEditingController eCtrl = TextEditingController();
 
     return TextButton(
-      onPressed: () => showCommentDialog(context, appState, eCtrl, ""),
+      onPressed: () => showCommentDialog(context, appState, eCtrl, "", 0),
       child: Text('Add comment'),
     );
   }
 }
 
 Future<dynamic> showCommentDialog(BuildContext context, MyAppState appState,
-    TextEditingController eCtrl, String initText) {
+    TextEditingController eCtrl, String initText, int index) {
   return showDialog(
     context: context,
     builder: (BuildContext context) => AlertDialog(
@@ -1294,7 +1352,7 @@ Future<dynamic> showCommentDialog(BuildContext context, MyAppState appState,
           hintText: "Add new comment here...",
           suffixIcon: IconButton(
             onPressed: () {
-              appState.editOrSaveComment(eCtrl.text);
+              appState.editOrSaveComment(eCtrl.text, index);
               eCtrl.clear();
               Navigator.pop(context, "OK");
             },
@@ -1313,7 +1371,7 @@ Future<dynamic> showCommentDialog(BuildContext context, MyAppState appState,
         ),
         TextButton(
           onPressed: () {
-            appState.editOrSaveComment(eCtrl.text);
+            appState.editOrSaveComment(eCtrl.text, index);
             eCtrl.clear();
             Navigator.pop(context, "OK");
           },
