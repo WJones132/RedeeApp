@@ -786,6 +786,16 @@ class MyAppState extends ChangeNotifier {
       '$index': null,
     });
 
+    await ref.get().then((value) => {
+          if (value.children.isEmpty) {ref.set("")}
+        });
+
+    // if (ref) {
+    //   await ref.update({
+    //     "comments": "",
+    //   });
+    // }
+
     notifyListeners();
   }
 
@@ -940,6 +950,8 @@ class InstructorPage extends StatelessWidget {
       'Element E',
     ];
 
+    final dasElements = <String>[];
+
     print(appState.selectedInstructor);
 
     return Scaffold(
@@ -957,61 +969,131 @@ class InstructorPage extends StatelessWidget {
             child: const Text('User details (disabled)'),
           ),
           Expanded(
-            child: ListView.separated(
-              padding: const EdgeInsets.all(20),
-              itemCount: elements.length,
-              separatorBuilder: (context, index) => const Divider(),
-              itemBuilder: (context, index) {
-                return Material(
-                  child: InkWell(
-                    onTap: () => {
-                      appState.selectedElement = elements[index],
-                      // context.go('/element'),
-                      Navigator.pushNamed(context, '/element'),
-                    },
-                    child: Row(
-                      children: [
-                        Container(
-                          alignment: Alignment.centerLeft,
-                          height: 50,
-                          child: Text(elements[index]),
-                        ),
-                        Spacer(),
-                        ToggleSwitch(
-                          changeOnTap: false,
-                          totalSwitches: 1,
-                          labels: ['Complete'],
-                          minWidth: 90,
-                          minHeight: 30,
-                          activeBgColors: [
-                            [Colors.greenAccent, Colors.green]
-                          ],
-                          initialLabelIndex:
-                              instructors[appState.selectedInstructor][cbtOrDas]
-                                  [String.fromCharCode(index + 65)]['complete'],
-                        ),
-                      ],
+            child: Column(
+              children: [
+                ExpansionTile(
+                  title: Text('CBT'),
+                  children: [
+                    ListView.separated(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: elements.length,
+                      shrinkWrap: true,
+                      separatorBuilder: (context, index) => const Divider(),
+                      itemBuilder: (context, index) {
+                        return Material(
+                          child: InkWell(
+                            onTap: () => {
+                              appState.selectedElement = elements[index],
+                              // context.go('/element'),
+                              Navigator.pushNamed(context, '/element'),
+                            },
+                            child: Row(
+                              children: [
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  height: 50,
+                                  child: Text(elements[index]),
+                                ),
+                                Spacer(),
+                                ToggleSwitch(
+                                  changeOnTap: false,
+                                  totalSwitches: 1,
+                                  labels: ['Complete'],
+                                  minWidth: 90,
+                                  minHeight: 30,
+                                  activeBgColors: [
+                                    [Colors.greenAccent, Colors.green]
+                                  ],
+                                  initialLabelIndex:
+                                      instructors[appState.selectedInstructor]
+                                                  ['CBT']
+                                              [String.fromCharCode(index + 65)]
+                                          ['complete'],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
                     ),
-                  ),
-                );
-              },
+                    ElevatedButton(
+                      onPressed: () {
+                        // Check all elements marked as complete
+                        // Build PDF file
+                      },
+                      child: Text('Submit CBT Assessment'),
+                    ),
+                  ],
+                ),
+                ExpansionTile(
+                  title: Text('DAS'),
+                )
+              ],
             ),
           ),
-          Expanded(
-            flex: 0,
-            child: Container(
-              padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
-              alignment: FractionalOffset.bottomCenter,
-              child: ElevatedButton(
-                onPressed: () {
-                  // Save to db
+          // Expanded(
+          //   child: ExpansionTile(
+          //     title: Text('DAS'),
+          //     children: [
+          //       ListView.separated(
+          //         padding: const EdgeInsets.all(20),
+          //         itemCount: elements.length,
+          //         shrinkWrap: true,
+          //         separatorBuilder: (context, index) => const Divider(),
+          //         itemBuilder: (context, index) {
+          //           return Material(
+          //             child: InkWell(
+          //               onTap: () => {
+          //                 appState.selectedElement = dasElements[index],
+          //                 // Navigator.pushNamed(context, '/das/element')
+          //               },
+          //               child: Row(
+          //                 children: [
+          //                   Container(
+          //                     alignment: Alignment.centerLeft,
+          //                     height: 50,
+          //                     child: Text(dasElements[index]),
+          //                   ),
+          //                   Spacer(),
+          //                   ToggleSwitch(
+          //                     changeOnTap: false,
+          //                     totalSwitches: 1,
+          //                     labels: ['Complete'],
+          //                     minWidth: 90,
+          //                     minHeight: 30,
+          //                     activeBgColors: [
+          //                       [Colors.greenAccent, Colors.green]
+          //                     ],
+          //                     initialLabelIndex:
+          //                         instructors[appState.selectedInstructor]
+          //                                     ['DAS']
+          //                                 [String.fromCharCode(index + 65)]
+          //                             ['complete'],
+          //                   ),
+          //                 ],
+          //               ),
+          //             ),
+          //           );
+          //         },
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // Expanded(
+          //   flex: 0,
+          //   child: Container(
+          //     padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
+          //     alignment: FractionalOffset.bottomCenter,
+          //     child: ElevatedButton(
+          //       onPressed: () {
+          //         // Save to db
 
-                  Navigator.pop(context);
-                },
-                child: Text('Submit Report'),
-              ),
-            ),
-          ),
+          //         Navigator.pop(context);
+          //       },
+          //       child: Text('Submit Report'),
+          //     ),
+          //   ),
+          // ),
         ],
       ),
     );
