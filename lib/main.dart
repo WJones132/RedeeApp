@@ -16,6 +16,14 @@ late DatabaseReference elementsCBTRef;
 List instructors = [];
 List elementsCBT = [];
 List elementsDAS = [];
+List elements = <String>[
+  'Element A',
+  'Element B',
+  'Element C',
+  'Element D',
+  'Element E',
+];
+List dasElements = <String>[];
 String cbtOrDas = "CBT";
 
 void initFireDatabase() async {
@@ -781,7 +789,6 @@ class MyAppState extends ChangeNotifier {
   void deleteComment(int index) async {
     DatabaseReference ref = database.ref(
         "Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/$selectedComment/comments");
-
     await ref.update({
       '$index': null,
     });
@@ -789,36 +796,50 @@ class MyAppState extends ChangeNotifier {
     await ref.get().then((value) => {
           if (value.children.isEmpty) {ref.set("")}
         });
-
-    // if (ref) {
-    //   await ref.update({
-    //     "comments": "",
-    //   });
-    // }
-
     notifyListeners();
   }
 
   void setStatusCompletion(int index, int yesNo) async {
     DatabaseReference ref = database.ref();
-
     await ref.update({
       'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/${index.toString()}/complete':
           yesNo
     });
-
     notifyListeners();
   }
 
-  void submitElement() async {
+  void submitElement(int complete) async {
     DatabaseReference ref = database.ref();
-
     await ref.update({
       'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/complete':
-          0
+          complete
     });
-
     notifyListeners();
+  }
+
+  Future<bool> checkAllElementCompletion() async {
+    bool complete = true;
+    DatabaseReference ref = database.ref();
+    DataSnapshot snapshot = await ref
+        // await ref
+        .child('Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas')
+        .get();
+    //     .then((snapshot) {
+    //   for (final child in snapshot.children) {
+    //     if (child.children.last.value == 1) {
+    //       return false;
+    //     }
+    //   }
+    //   return true;
+    // });
+
+    for (final child in snapshot.children) {
+      if (child.children.last.value == 1) {
+        complete = false;
+      }
+    }
+
+    return Future.value(complete);
   }
 }
 
@@ -936,23 +957,40 @@ class SelectInstructorPage extends StatelessWidget {
   }
 }
 
+// class UnsetElementCompletion extends StatelessWidget {
+//   const UnsetElementCompletion({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     var appState = context.watch<MyAppState>();
+//     return AlertDialog(
+//       title: Text('Unsubmit element?'),
+//       content: Text(
+//           'Continuing will remove the submission status of this element. \nDo you want to continue?'),
+//       actions: <Widget>[
+//         TextButton(
+//           onPressed: () => Navigator.pop(context, 'Cancel'),
+//           child: Text('Cancel'),
+//         ),
+//         TextButton(
+//           onPressed: () => {
+//             Navigator.pop(context, 'OK'),
+//             appState.selectedElement = elements[index],
+//             Navigator.pushNamed(context, '/element'),
+//           },
+//           child: Text('OK'),
+//         ),
+//       ],
+//     );
+//   }
+// }
+
 class InstructorPage extends StatelessWidget {
   InstructorPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    final elements = <String>[
-      'Element A',
-      'Element B',
-      'Element C',
-      'Element D',
-      'Element E',
-    ];
-
-    final dasElements = <String>[];
-
-    print(appState.selectedInstructor);
 
     return Scaffold(
       appBar: AppBar(
@@ -983,9 +1021,47 @@ class InstructorPage extends StatelessWidget {
                         return Material(
                           child: InkWell(
                             onTap: () => {
-                              appState.selectedElement = elements[index],
-                              // context.go('/element'),
-                              Navigator.pushNamed(context, '/element'),
+                              cbtOrDas = 'CBT',
+                              if (instructors[appState.selectedInstructor]
+                                              ['CBT']
+                                          [String.fromCharCode(index + 65)]
+                                      ['complete'] ==
+                                  0)
+                                {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      title: Text('Unsubmit element?'),
+                                      content: Text(
+                                          'Continuing will remove the submission status of this element. \nDo you want to continue?'),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'Cancel'),
+                                          child: Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => {
+                                            Navigator.pop(context, 'OK'),
+                                            appState.selectedElement =
+                                                elements[index],
+                                            appState.submitElement(1),
+                                            Navigator.pushNamed(
+                                                context, '/element'),
+                                          },
+                                          child: Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                }
+                              else
+                                {
+                                  appState.selectedElement = elements[index],
+                                  // context.go('/element'),
+                                  Navigator.pushNamed(context, '/element'),
+                                },
                             },
                             child: Row(
                               children: [
@@ -1017,9 +1093,44 @@ class InstructorPage extends StatelessWidget {
                       },
                     ),
                     ElevatedButton(
-                      onPressed: () {
+                      onPressed: () async {
                         // Check all elements marked as complete
                         // Build PDF file
+                        // bool caec = await appState.checkAllElementCompletion();
+                        Future<bool> caec() async {
+                          bool complete =
+                              await appState.checkAllElementCompletion();
+                          return complete;
+                        }
+
+                        cbtOrDas = 'CBT';
+                        if (!await caec()) {
+                          // Check user wants to continue
+                          print('CheckingCheckingCheckingChecking');
+                          showDialog(
+                            context: context,
+                            builder: (BuildContext context) => AlertDialog(
+                              title: Text('Are you sure?'),
+                              content: Text(
+                                  'Not all Elements have been marked as Complete. \nContinuing will email you a file with current Element statuses, and reset all Elements back to their original state. \nAre you sure you want to continue?'),
+                              actions: <Widget>[
+                                TextButton(
+                                  onPressed: () =>
+                                      Navigator.pop(context, 'Cancel'),
+                                  child: Text('Cancel'),
+                                ),
+                                TextButton(
+                                  onPressed: () {
+                                    Navigator.pop(context, 'OK');
+                                    print('OKOKOK');
+                                  },
+                                  child: Text('OK'),
+                                ),
+                              ],
+                            ),
+                          );
+                        }
+                        // build pdf
                       },
                       child: Text('Submit CBT Assessment'),
                     ),
@@ -1027,78 +1138,129 @@ class InstructorPage extends StatelessWidget {
                 ),
                 ExpansionTile(
                   title: Text('DAS'),
+                  children: [
+                    ListView.separated(
+                      padding: const EdgeInsets.all(20),
+                      itemCount: dasElements.length,
+                      shrinkWrap: true,
+                      separatorBuilder: (context, index) => const Divider(),
+                      itemBuilder: (context, index) {
+                        return Material(
+                          child: InkWell(
+                            onTap: () => {
+                              cbtOrDas = 'DAS',
+                              if (instructors[appState.selectedInstructor]
+                                              ['DAS']
+                                          [String.fromCharCode(index + 65)]
+                                      ['complete'] ==
+                                  0)
+                                {
+                                  showDialog(
+                                    context: context,
+                                    builder: (BuildContext context) =>
+                                        AlertDialog(
+                                      title: Text('Unsubmit element?'),
+                                      content: Text(
+                                          'Continuing will remove the submission status of this element. \nDo you want to continue?'),
+                                      actions: <Widget>[
+                                        TextButton(
+                                          onPressed: () =>
+                                              Navigator.pop(context, 'Cancel'),
+                                          child: Text('Cancel'),
+                                        ),
+                                        TextButton(
+                                          onPressed: () => {
+                                            Navigator.pop(context, 'OK'),
+                                            appState.selectedElement =
+                                                elements[index],
+                                            appState.submitElement(1),
+                                            Navigator.pushNamed(
+                                                context, '/element'),
+                                          },
+                                          child: Text('OK'),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                }
+                              else
+                                {
+                                  appState.selectedElement = elements[index],
+                                  // context.go('/element'),
+                                  Navigator.pushNamed(context, '/element'),
+                                },
+                            },
+                            child: Row(
+                              children: [
+                                Container(
+                                  alignment: Alignment.centerLeft,
+                                  height: 50,
+                                  child: Text(elements[index]),
+                                ),
+                                Spacer(),
+                                ToggleSwitch(
+                                  changeOnTap: false,
+                                  totalSwitches: 1,
+                                  labels: ['Complete'],
+                                  minWidth: 90,
+                                  minHeight: 30,
+                                  activeBgColors: [
+                                    [Colors.greenAccent, Colors.green]
+                                  ],
+                                  initialLabelIndex:
+                                      instructors[appState.selectedInstructor]
+                                                  ['DAS']
+                                              [String.fromCharCode(index + 65)]
+                                          ['complete'],
+                                ),
+                              ],
+                            ),
+                          ),
+                        );
+                      },
+                    ),
+                    ElevatedButton(
+                      onPressed: () {
+                        // Check all elements marked as complete
+                        // Build PDF file
+                        cbtOrDas = 'DAS';
+                      },
+                      child: Text('Submit DAS Assessment (disabled)'),
+                    ),
+                  ],
                 )
               ],
             ),
           ),
-          // Expanded(
-          //   child: ExpansionTile(
-          //     title: Text('DAS'),
-          //     children: [
-          //       ListView.separated(
-          //         padding: const EdgeInsets.all(20),
-          //         itemCount: elements.length,
-          //         shrinkWrap: true,
-          //         separatorBuilder: (context, index) => const Divider(),
-          //         itemBuilder: (context, index) {
-          //           return Material(
-          //             child: InkWell(
-          //               onTap: () => {
-          //                 appState.selectedElement = dasElements[index],
-          //                 // Navigator.pushNamed(context, '/das/element')
-          //               },
-          //               child: Row(
-          //                 children: [
-          //                   Container(
-          //                     alignment: Alignment.centerLeft,
-          //                     height: 50,
-          //                     child: Text(dasElements[index]),
-          //                   ),
-          //                   Spacer(),
-          //                   ToggleSwitch(
-          //                     changeOnTap: false,
-          //                     totalSwitches: 1,
-          //                     labels: ['Complete'],
-          //                     minWidth: 90,
-          //                     minHeight: 30,
-          //                     activeBgColors: [
-          //                       [Colors.greenAccent, Colors.green]
-          //                     ],
-          //                     initialLabelIndex:
-          //                         instructors[appState.selectedInstructor]
-          //                                     ['DAS']
-          //                                 [String.fromCharCode(index + 65)]
-          //                             ['complete'],
-          //                   ),
-          //                 ],
-          //               ),
-          //             ),
-          //           );
-          //         },
-          //       ),
-          //     ],
-          //   ),
-          // ),
-          // Expanded(
-          //   flex: 0,
-          //   child: Container(
-          //     padding: EdgeInsets.fromLTRB(0, 0, 0, 20),
-          //     alignment: FractionalOffset.bottomCenter,
-          //     child: ElevatedButton(
-          //       onPressed: () {
-          //         // Save to db
-
-          //         Navigator.pop(context);
-          //       },
-          //       child: Text('Submit Report'),
-          //     ),
-          //   ),
-          // ),
         ],
       ),
     );
   }
 }
+
+// class AlertElementsNotCompletedWarning extends StatelessWidget {
+//   const AlertElementsNotCompletedWarning({super.key});
+
+//   @override
+//   Widget build(BuildContext context) {
+//     return AlertDialog(
+//         title: Text('Are you sure?'),
+//         content: Text(
+//             'Not all Elements have been marked as Complete. \nContinuing will email you a file with current Element statuses, and reset all Elements back to their original state. \nAre you sure you want to continue?'),
+//         actions: <Widget>[
+//           TextButton(
+//             onPressed: () => Navigator.pop(context, 'Cancel'),
+//             child: Text('Cancel'),
+//           ),
+//           TextButton(
+//             onPressed: () => Navigator.pop(context, 'OK'),
+//             child: Text('OK'),
+//           ),
+//         ],
+//       ),
+//     );
+//   }
+// }
 
 class CheckboxExample extends StatefulWidget {
   CheckboxExample({super.key});
@@ -1273,7 +1435,7 @@ class ElementPage extends StatelessWidget {
               child: ElevatedButton(
                 onPressed: () {
                   // Save to db
-                  appState.submitElement();
+                  appState.submitElement(0);
                   Navigator.pop(context);
                 },
                 child: Text('Submit Element'),
