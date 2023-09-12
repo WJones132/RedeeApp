@@ -30,25 +30,21 @@ List elements = <String>[
 List dasElements = <String>[];
 String cbtOrDas = "CBT";
 
-void initFireDatabase() async {
+Future<void> initFireDatabase() async {
   database = FirebaseDatabase.instance;
 
-  instructorsRef = database.ref().child('Instructors');
-  instructorsRef.onValue.listen((DatabaseEvent event) {
-    instructors.clear();
-    for (final child in event.snapshot.children) {
-      instructors.add(child.value);
-    }
-  });
+  DataSnapshot instructorsRef = await database.ref().child('Instructors').get();
+  for (final child in instructorsRef.children) {
+    instructors.add(child.value);
+  }
 
-  elementsCBTRef = database.ref().child('Elements/CBT');
-  elementsCBTRef.onValue.listen((DatabaseEvent event) {
-    for (final child in event.snapshot.children) {
-      elementsCBT.add(child.value);
-    }
-  });
+  DataSnapshot elementsCBTRef =
+      await database.ref().child('Elements/CBT').get();
+  for (final child in elementsCBTRef.children) {
+    elementsCBT.add(child.value);
+  }
 
-  // Uncomment when DAS integrated
+  // Uncomment when DAS integrated - match above
   // DatabaseReference elementsDASRef =
   //     FirebaseDatabase.instance.ref().child('Elements/CBT');
   // elementsDASRef.onValue.listen((DatabaseEvent event) {
@@ -59,17 +55,11 @@ void initFireDatabase() async {
 }
 
 void main() async {
-  if (kIsWeb) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.web,
-    );
-    initFireDatabase();
-  } else if (!Platform.isLinux && !Platform.isWindows) {
-    await Firebase.initializeApp(
-      options: DefaultFirebaseOptions.currentPlatform,
-    );
-    initFireDatabase();
-  }
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
+  );
+  await initFireDatabase();
 
   runApp(MyApp());
 }
