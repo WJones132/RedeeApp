@@ -43,6 +43,9 @@ dependencies:
   go_router: ^8.0.5
   toggle_switch: ^2.1.0
   firebase_database: ^10.2.3
+  pdf: ^3.10.4
+  path_provider: ^2.1.1
+  mailer: ^6.0.1
 
 dev_dependencies:
   flutter_test:

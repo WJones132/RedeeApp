@@ -1,4 +1,7 @@
-import 'dart:js_interop';
+import 'package:mailer/smtp_server.dart';
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+import 'package:path_provider/path_provider.dart';
 
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
@@ -7,8 +10,9 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_database/firebase_database.dart';
 import 'firebase_options.dart';
 import 'package:toggle_switch/toggle_switch.dart';
-import 'dart:io' show Platform;
+import 'dart:io';
 import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:mailer/mailer.dart';
 
 late FirebaseDatabase database;
 late DatabaseReference instructorsRef;
@@ -33,7 +37,6 @@ void initFireDatabase() async {
   instructorsRef.onValue.listen((DatabaseEvent event) {
     instructors.clear();
     for (final child in event.snapshot.children) {
-      print(child.value);
       instructors.add(child.value);
     }
   });
@@ -759,12 +762,6 @@ class MyAppState extends ChangeNotifier {
     DatabaseReference ref = database.ref(
         "Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/$selectedComment/comments");
 
-    if (ref.isUndefinedOrNull) {
-      await ref.update({
-        "comments": "",
-      });
-    }
-
     if (comment.isNotEmpty) {
       if (editOrSave.toLowerCase() == "edit") {
         await ref.update({
@@ -789,13 +786,24 @@ class MyAppState extends ChangeNotifier {
   void deleteComment(int index) async {
     DatabaseReference ref = database.ref(
         "Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/$selectedComment/comments");
+
     await ref.update({
       '$index': null,
     });
 
-    await ref.get().then((value) => {
-          if (value.children.isEmpty) {ref.set("")}
-        });
+    await ref.get().then((value) async {
+      if (value.children.isEmpty) {
+        await ref.set("");
+      } else {
+        for (final (i, child) in value.children.indexed) {
+          if (child.key != i.toString()) {
+            await ref.update({'${int.parse('${child.key}') - 1}': child.value});
+          }
+        }
+        await ref.update({'${value.children.last.key}': null});
+      }
+    });
+
     notifyListeners();
   }
 
@@ -821,17 +829,8 @@ class MyAppState extends ChangeNotifier {
     bool complete = true;
     DatabaseReference ref = database.ref();
     DataSnapshot snapshot = await ref
-        // await ref
         .child('Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas')
         .get();
-    //     .then((snapshot) {
-    //   for (final child in snapshot.children) {
-    //     if (child.children.last.value == 1) {
-    //       return false;
-    //     }
-    //   }
-    //   return true;
-    // });
 
     for (final child in snapshot.children) {
       if (child.children.last.value == 1) {
@@ -840,6 +839,45 @@ class MyAppState extends ChangeNotifier {
     }
 
     return Future.value(complete);
+  }
+
+  void buildAndEmailPDF() async {
+    final pdf = pw.Document();
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        build: (pw.Context context) {
+          return pw.Center(
+            child: pw.Text("Hello World!"),
+          );
+        },
+      ),
+    );
+    // final output = await getApplicationDocumentsDirectory();
+    // final name = selectedInstructorDetails['name'];
+    // final date = DateTime.now().toString().replaceAll(' ', '_');
+    // final file = File('${output.path}/${name}_CBT_Assessment_$date');
+
+    String username = 'username@gmail.com';
+    String password = 'password';
+
+    final smtpServer = gmail(username, password);
+
+    final message = Message()
+      ..from = Address(username, 'TEST')
+      ..recipients.add(Address('darive1854@nickolis.com'))
+      ..subject = 'This is a test subject.'
+      ..text = 'This is some dummy text.';
+
+    try {
+      final sendReport = await send(message, smtpServer);
+      print('email sent ${sendReport.toString()}');
+    } on MailerException catch (e) {
+      print('Message not sent!');
+      for (var p in e.problems) {
+        print('Problem: ${p.code}: ${p.msg}');
+      }
+    }
   }
 }
 
@@ -1094,19 +1132,13 @@ class InstructorPage extends StatelessWidget {
                     ),
                     ElevatedButton(
                       onPressed: () async {
-                        // Check all elements marked as complete
-                        // Build PDF file
-                        // bool caec = await appState.checkAllElementCompletion();
+                        cbtOrDas = 'CBT';
+
                         Future<bool> caec() async {
-                          bool complete =
-                              await appState.checkAllElementCompletion();
-                          return complete;
+                          return await appState.checkAllElementCompletion();
                         }
 
-                        cbtOrDas = 'CBT';
                         if (!await caec()) {
-                          // Check user wants to continue
-                          print('CheckingCheckingCheckingChecking');
                           showDialog(
                             context: context,
                             builder: (BuildContext context) => AlertDialog(
@@ -1122,7 +1154,6 @@ class InstructorPage extends StatelessWidget {
                                 TextButton(
                                   onPressed: () {
                                     Navigator.pop(context, 'OK');
-                                    print('OKOKOK');
                                   },
                                   child: Text('OK'),
                                 ),
@@ -1130,7 +1161,10 @@ class InstructorPage extends StatelessWidget {
                             ),
                           );
                         }
+
                         // build pdf
+                        print('building pdf');
+                        appState.buildAndEmailPDF();
                       },
                       child: Text('Submit CBT Assessment'),
                     ),
@@ -1332,8 +1366,6 @@ class ElementPage extends StatelessWidget {
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
 
-    print(appState.selectedElement);
-
     return Scaffold(
       appBar: AppBar(
         centerTitle: true,
@@ -1465,9 +1497,6 @@ class DyanmicList extends State<ListDisplay> {
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
-    // var commentText = appState.data['instructors'][appState.selectedInstructor]
-    //         ['id'][cbtOrDas][appState.selectedElement.split(" ")[1]]
-    //     [int.parse(appState.selectedElement.split(" ").last)]['comments'];
 
     var commentText = instructors[appState.selectedInstructor][cbtOrDas]
             [appState.selectedElement[appState.selectedElement.length - 1]]
