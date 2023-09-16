@@ -1,3 +1,5 @@
+// import 'dart:ffi';
+
 import 'package:mailer/smtp_server.dart';
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
@@ -33,20 +35,28 @@ String cbtOrDas = "CBT";
 Future<void> initFireDatabase() async {
   database = FirebaseDatabase.instance;
 
-  DataSnapshot instructorsRef = await database.ref().child('Instructors').get();
-  for (final child in instructorsRef.children) {
+  DataSnapshot instructorsRefGetter =
+      await database.ref().child('Instructors').get();
+  for (final child in instructorsRefGetter.children) {
     instructors.add(child.value);
   }
 
-  DataSnapshot elementsCBTRef =
+  // instructorsRef.onValue.listen((DatabaseEvent event) {
+  //   for (final child in event.snapshot.children) {
+  //     instructors.clear();
+  //     instructors.add(child.value);
+  //   }
+  // });
+  // instructorsRef = database.ref().child('Instructors');
+
+  DataSnapshot elementsCBTRefGetter =
       await database.ref().child('Elements/CBT').get();
-  for (final child in elementsCBTRef.children) {
+  for (final child in elementsCBTRefGetter.children) {
     elementsCBT.add(child.value);
   }
 
   // Uncomment when DAS integrated - match above
-  // DatabaseReference elementsDASRef =
-  //     FirebaseDatabase.instance.ref().child('Elements/CBT');
+  // DatabaseReference elementsDASRef = database.ref().child('Elements/CBT');
   // elementsDASRef.onValue.listen((DatabaseEvent event) {
   //   for (final child in event.snapshot.children) {
   //     elementsDAS.add(child.value);
@@ -63,6 +73,13 @@ void main() async {
 
   runApp(MyApp());
 }
+
+// class Instructors extends State {
+//   @override
+//   State build(BuildContext context) {
+//     return ChangeNotifierProvider(create: (context) => Instructors())
+//   }
+// }
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
@@ -152,6 +169,14 @@ class MyAppState extends ChangeNotifier {
   late String selectedComment;
   String commentDialogTitle = 'New comment';
   String editOrSave = "save";
+  Map<String, int> cbtElementCompleteStatus = {
+    'A': 1,
+    'B': 1,
+    'C': 1,
+    'D': 1,
+    'E': 1,
+  };
+  Map<String, int> dasElementCompleteStatus = {};
 
   // List instructors = [];
 
@@ -756,15 +781,28 @@ class MyAppState extends ChangeNotifier {
       if (editOrSave.toLowerCase() == "edit") {
         await ref.update({
           '$index': comment,
+        }).then((value) {
+          // do add new comment to array
+          instructors[selectedInstructor][cbtOrDas]
+                  [selectedElement[selectedElement.length - 1]][selectedComment]
+              ['comments'][index] = comment;
         });
       } else if (editOrSave.toLowerCase() == "save") {
-        int max = instructors[selectedInstructor][cbtOrDas]
-                    [selectedElement[selectedElement.length - 1]]
-                [selectedComment]['comments']
-            .length;
+        var i = instructors[selectedInstructor][cbtOrDas]
+                [selectedElement[selectedElement.length - 1]][selectedComment]
+            ['comments'];
+
+        if (i == "") {
+          i = [];
+        }
+
+        int max = i.length;
 
         await ref.update({
           '$max': comment,
+        }).then((value) {
+          // do update comments array
+          i.add(comment);
         });
       }
     }
@@ -779,6 +817,11 @@ class MyAppState extends ChangeNotifier {
 
     await ref.update({
       '$index': null,
+    }).then((value) {
+      instructors[selectedInstructor][cbtOrDas]
+                  [selectedElement[selectedElement.length - 1]][selectedComment]
+              ['comments']
+          .removeAt(index);
     });
 
     await ref.get().then((value) async {
@@ -802,16 +845,23 @@ class MyAppState extends ChangeNotifier {
     await ref.update({
       'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/${index.toString()}/complete':
           yesNo
+    }).then((value) {
+      instructors[selectedInstructor][cbtOrDas]
+              [selectedElement[selectedElement.length - 1]][index.toString()]
+          ['complete'] = yesNo;
     });
+
     notifyListeners();
   }
 
   void submitElement(int complete) async {
-    DatabaseReference ref = database.ref();
-    await ref.update({
-      'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/complete':
-          complete
+    DatabaseReference ref = database.ref().child(
+        'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}');
+    await ref.update({'complete': complete}).then((value) {
+      instructors[selectedInstructor][cbtOrDas]
+          [selectedElement[selectedElement.length - 1]]['complete'] = complete;
     });
+
     notifyListeners();
   }
 
@@ -1013,12 +1063,85 @@ class SelectInstructorPage extends StatelessWidget {
 //   }
 // }
 
+class CompleteElementToggle extends StatefulWidget {
+  CompleteElementToggle({
+    Key? key,
+    required this.index,
+  }) : super(key: key);
+
+  final int index;
+
+  @override
+  State<CompleteElementToggle> createState() => _CompleteElementToggle();
+}
+
+class _CompleteElementToggle extends State<CompleteElementToggle> {
+  late int _complete;
+
+  void setIndex(int eComplete) {
+    setState(() async {
+      var appState = context.watch<MyAppState>();
+      DataSnapshot snap = await database
+          .ref()
+          .child(
+              'Instructors/${appState.selectedInstructorDetails['ID']}/$cbtOrDas')
+          .get();
+
+      for (final child in snap.children) {
+        _complete = int.parse(child.children.last.value.toString());
+      }
+
+      // _complete = eComplete;
+    });
+  }
+
+  // Future<void> _setIndex(i) async {
+  //   setIndex(i);
+  // }
+
+  // Future<int> getCompleteStatus() async {
+  //   DataSnapshot snapshot = await database
+  //       .ref()
+  //       .child(
+  //           'Instructors/${selectedInstructorDetails['ID']}/$cbtOrDas/${selectedElement[selectedElement.length - 1]}/${index.toString()}/complete')
+  //       .get();
+
+  //   for (final child in snapshot.children) {
+  //     _complete = child.value;
+  //   }
+  // }
+
+  @override
+  Widget build(BuildContext context) {
+    var appState = context.watch<MyAppState>();
+    return ToggleSwitch(
+      changeOnTap: false,
+      totalSwitches: 1,
+      labels: ['Complete'],
+      minWidth: 90,
+      minHeight: 30,
+      activeBgColors: [
+        [Colors.greenAccent, Colors.green]
+      ],
+      initialLabelIndex: Provider.of<_CompleteElementToggle>(context)._complete,
+      // Provider.of<_CompleteElementToggle>(context, listen: true).eIndex,
+    );
+  }
+}
+
 class InstructorPage extends StatelessWidget {
   InstructorPage({super.key});
 
   @override
   Widget build(BuildContext context) {
     var appState = context.watch<MyAppState>();
+
+    var c = appState.cbtElementCompleteStatus;
+    c['A'] = instructors[appState.selectedInstructor]['CBT']['A']['complete'];
+    c['B'] = instructors[appState.selectedInstructor]['CBT']['B']['complete'];
+    c['C'] = instructors[appState.selectedInstructor]['CBT']['C']['complete'];
+    c['D'] = instructors[appState.selectedInstructor]['CBT']['D']['complete'];
+    c['E'] = instructors[appState.selectedInstructor]['CBT']['E']['complete'];
 
     return Scaffold(
       appBar: AppBar(
@@ -1046,15 +1169,20 @@ class InstructorPage extends StatelessWidget {
                       shrinkWrap: true,
                       separatorBuilder: (context, index) => const Divider(),
                       itemBuilder: (context, index) {
+                        // var status = ;
+
                         return Material(
                           child: InkWell(
                             onTap: () => {
                               cbtOrDas = 'CBT',
-                              if (instructors[appState.selectedInstructor]
-                                              ['CBT']
-                                          [String.fromCharCode(index + 65)]
-                                      ['complete'] ==
+                              if (appState.cbtElementCompleteStatus[
+                                      String.fromCharCode(index + 65)] ==
                                   0)
+                                // if (instructors[appState.selectedInstructor]
+                                //                 ['CBT']
+                                //             [String.fromCharCode(index + 65)]
+                                //         ['complete'] ==
+                                //     0)
                                 {
                                   showDialog(
                                     context: context,
@@ -1099,6 +1227,23 @@ class InstructorPage extends StatelessWidget {
                                   child: Text(elements[index]),
                                 ),
                                 Spacer(),
+                                // StreamBuilder(
+                                //   stream: instructorsRef.sn,
+                                //   builder: (context, snapshot) {
+                                //     return ToggleSwitch(
+                                //       changeOnTap: false,
+                                //       totalSwitches: 1,
+                                //       labels: ['Complete'],
+                                //       minWidth: 90,
+                                //       minHeight: 30,
+                                //       activeBgColors: [
+                                //         [Colors.greenAccent, Colors.green]
+                                //       ],
+
+                                //     );
+                                //   },
+                                // ),
+                                // CompleteElementToggle(index: index).createState().widget,
                                 ToggleSwitch(
                                   changeOnTap: false,
                                   totalSwitches: 1,
@@ -1106,13 +1251,14 @@ class InstructorPage extends StatelessWidget {
                                   minWidth: 90,
                                   minHeight: 30,
                                   activeBgColors: [
-                                    [Colors.greenAccent, Colors.green]
+                                    [
+                                      Colors.greenAccent,
+                                      Colors.green,
+                                    ]
                                   ],
                                   initialLabelIndex:
-                                      instructors[appState.selectedInstructor]
-                                                  ['CBT']
-                                              [String.fromCharCode(index + 65)]
-                                          ['complete'],
+                                      appState.cbtElementCompleteStatus[
+                                          String.fromCharCode(index + 65)],
                                 ),
                               ],
                             ),
@@ -1431,7 +1577,6 @@ class ElementPage extends StatelessWidget {
                               child: ElevatedButton(
                                 onPressed: () {
                                   appState.selectedComment = index.toString();
-                                  // context.go('/comments');
                                   Navigator.pushNamed(context, '/comments');
                                 },
                                 child: Text(
